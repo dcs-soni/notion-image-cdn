@@ -1,0 +1,82 @@
+# =============================================================================
+# Docker Compose — Development Environment
+# =============================================================================
+# Services:
+#   - service: The Notion Image CDN proxy (built from source)
+#   - redis:   Edge cache (L2)
+#   - minio:   Local S3-compatible storage (optional, for testing S3 backend)
+# =============================================================================
+
+services:
+  # ---------- Notion Image CDN Service ----------
+  service:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - LOG_LEVEL=debug
+      - STORAGE_BACKEND=fs
+      - CACHE_DIR=/data/cache
+      - REDIS_URL=redis://redis:6379
+      - RATE_LIMIT_PER_MINUTE=1000
+    volumes:
+      - cache-data:/data/cache
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - notion-cdn
+
+  # ---------- Redis (L2 Edge Cache) ----------
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --requirepass ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - notion-cdn
+
+  # ---------- MinIO (Local S3, optional) ----------
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001" # Console
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+    networks:
+      - notion-cdn
+    profiles:
+      - s3 # Only start with: docker compose --profile s3 up
+
+volumes:
+  cache-data:
+  redis-data:
+  minio-data:
+
+networks:
+  notion-cdn:
+    driver: bridge
