@@ -87,9 +87,37 @@ describe('validateImageUrl', () => {
       expect(result.errorCode).toBe('PRIVATE_HOST');
     });
 
+    it('rejects full loopback range (127.0.0.2)', () => {
+      const allowed = new Set(['127.0.0.2']);
+      const result = validateImageUrl('https://127.0.0.2/secret', allowed);
+      expect(result.valid).toBe(false);
+      expect(result.errorCode).toBe('PRIVATE_HOST');
+    });
+
+    it('rejects 0.0.0.0', () => {
+      const allowed = new Set(['0.0.0.0']);
+      const result = validateImageUrl('https://0.0.0.0/secret', allowed);
+      expect(result.valid).toBe(false);
+      expect(result.errorCode).toBe('PRIVATE_HOST');
+    });
+
     it('rejects private IP ranges (10.x.x.x)', () => {
       const allowed = new Set(['10.0.0.1']);
       const result = validateImageUrl('https://10.0.0.1/internal', allowed);
+      expect(result.valid).toBe(false);
+      expect(result.errorCode).toBe('PRIVATE_HOST');
+    });
+
+    it('rejects carrier-grade NAT (100.64.x.x)', () => {
+      const allowed = new Set(['100.64.0.1']);
+      const result = validateImageUrl('https://100.64.0.1/internal', allowed);
+      expect(result.valid).toBe(false);
+      expect(result.errorCode).toBe('PRIVATE_HOST');
+    });
+
+    it('rejects private IP ranges (172.16.x.x)', () => {
+      const allowed = new Set(['172.16.0.1']);
+      const result = validateImageUrl('https://172.16.0.1/internal', allowed);
       expect(result.valid).toBe(false);
       expect(result.errorCode).toBe('PRIVATE_HOST');
     });
@@ -104,6 +132,20 @@ describe('validateImageUrl', () => {
     it('rejects cloud metadata endpoint', () => {
       const allowed = new Set(['169.254.169.254']);
       const result = validateImageUrl('https://169.254.169.254/latest/meta-data/', allowed);
+      expect(result.valid).toBe(false);
+      expect(result.errorCode).toBe('PRIVATE_HOST');
+    });
+
+    it('rejects .internal TLD', () => {
+      const allowed = new Set(['my-service.internal']);
+      const result = validateImageUrl('https://my-service.internal/secret', allowed);
+      expect(result.valid).toBe(false);
+      expect(result.errorCode).toBe('PRIVATE_HOST');
+    });
+
+    it('rejects multicast range (224.x.x.x)', () => {
+      const allowed = new Set(['224.0.0.1']);
+      const result = validateImageUrl('https://224.0.0.1/mcast', allowed);
       expect(result.valid).toBe(false);
       expect(result.errorCode).toBe('PRIVATE_HOST');
     });

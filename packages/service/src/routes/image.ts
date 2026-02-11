@@ -7,16 +7,12 @@
 // The route reconstructs the S3 path and delegates to the same proxy logic.
 // =============================================================================
 
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { fetchUpstreamImage, isFetchError } from "../lib/fetcher.js";
-import { generateCacheKey } from "../lib/cache-key.js";
-import {
-  optimizeImage,
-  negotiateFormat,
-  parseTransformOptions,
-} from "../lib/optimizer.js";
-import type { ResolvedConfig } from "../config/index.js";
-import type { ImageMetadata, CacheTier } from "../types/index.js";
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { fetchUpstreamImage, isFetchError } from '../lib/fetcher.js';
+import { generateCacheKey } from '../lib/cache-key.js';
+import { optimizeImage, negotiateFormat, parseTransformOptions } from '../lib/optimizer.js';
+import type { ResolvedConfig } from '../config/index.js';
+import type { ImageMetadata, CacheTier } from '../types/index.js';
 
 interface ImageParams {
   workspaceId: string;
@@ -25,17 +21,14 @@ interface ImageParams {
 }
 
 /** The known Notion S3 host for reconstruction */
-const NOTION_S3_HOST = "https://prod-files-secure.s3.us-west-2.amazonaws.com";
+const NOTION_S3_HOST = 'https://prod-files-secure.s3.us-west-2.amazonaws.com';
 
 export async function imageRoutes(fastify: FastifyInstance) {
   const config: ResolvedConfig = fastify.config;
 
   fastify.get<{ Params: ImageParams }>(
-    "/img/:workspaceId/:blockId/:filename",
-    async (
-      request: FastifyRequest<{ Params: ImageParams }>,
-      reply: FastifyReply,
-    ) => {
+    '/img/:workspaceId/:blockId/:filename',
+    async (request: FastifyRequest<{ Params: ImageParams }>, reply: FastifyReply) => {
       const { workspaceId, blockId, filename } = request.params;
 
       // Basic param validation
@@ -43,8 +36,8 @@ export async function imageRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({
           error: {
             status: 400,
-            code: "MISSING_PARAMS",
-            message: "workspaceId, blockId, and filename are required",
+            code: 'MISSING_PARAMS',
+            message: 'workspaceId, blockId, and filename are required',
             requestId: request.requestId,
           },
         });
@@ -59,8 +52,8 @@ export async function imageRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({
           error: {
             status: 400,
-            code: "INVALID_PARAMS",
-            message: "Invalid characters in URL parameters",
+            code: 'INVALID_PARAMS',
+            message: 'Invalid characters in URL parameters',
             requestId: request.requestId,
           },
         });
@@ -70,11 +63,8 @@ export async function imageRoutes(fastify: FastifyInstance) {
       const query = request.query as Record<string, unknown>;
       const requestedTransform = parseTransformOptions(query);
 
-      const negotiatedFormat = negotiateFormat(
-        request.headers.accept,
-        requestedTransform.format,
-      );
-      if (negotiatedFormat !== "original") {
+      const negotiatedFormat = negotiateFormat(request.headers.accept, requestedTransform.format);
+      if (negotiatedFormat !== 'original') {
         requestedTransform.format = negotiatedFormat;
       }
 
@@ -82,14 +72,14 @@ export async function imageRoutes(fastify: FastifyInstance) {
       // Cache key is based on path components (stable, not expiring)
       const cacheBaseUrl = `${NOTION_S3_HOST}/${workspaceId}/${blockId}/${filename}`;
       const cacheKey = generateCacheKey(cacheBaseUrl, requestedTransform);
-      let cacheTier: CacheTier = "ORIGIN";
+      let cacheTier: CacheTier = 'ORIGIN';
 
       // L2: Edge cache
       const edgeCache = fastify.edgeCache;
       if (edgeCache) {
         const l2Hit = await edgeCache.get(cacheKey);
         if (l2Hit) {
-          cacheTier = "L2_EDGE";
+          cacheTier = 'L2_EDGE';
           return sendResponse(reply, l2Hit.data, l2Hit.contentType, cacheTier);
         }
       }
@@ -98,7 +88,7 @@ export async function imageRoutes(fastify: FastifyInstance) {
       const storage = fastify.storage;
       const l3Hit = await storage.get(cacheKey);
       if (l3Hit) {
-        cacheTier = "L3_PERSISTENT";
+        cacheTier = 'L3_PERSISTENT';
 
         if (edgeCache) {
           edgeCache
@@ -114,12 +104,7 @@ export async function imageRoutes(fastify: FastifyInstance) {
             .catch(() => {});
         }
 
-        return sendResponse(
-          reply,
-          l3Hit.data,
-          l3Hit.metadata.contentType,
-          cacheTier,
-        );
+        return sendResponse(reply, l3Hit.data, l3Hit.metadata.contentType, cacheTier);
       }
 
       // ---------- Cache Miss ----------
@@ -130,12 +115,13 @@ export async function imageRoutes(fastify: FastifyInstance) {
       const upstreamUrl = cacheBaseUrl;
       request.log.info(
         { workspaceId, blockId, filename },
-        "Cache miss on clean URL — attempting upstream fetch",
+        'Cache miss on clean URL — attempting upstream fetch',
       );
 
       const fetchResult = await fetchUpstreamImage(upstreamUrl, {
         timeoutMs: config.UPSTREAM_TIMEOUT_MS,
         maxSizeBytes: config.MAX_IMAGE_SIZE_BYTES,
+        allowedDomains: config.allowedDomainsSet,
       });
 
       if (isFetchError(fetchResult)) {
@@ -148,9 +134,9 @@ export async function imageRoutes(fastify: FastifyInstance) {
           return reply.status(404).send({
             error: {
               status: 404,
-              code: "IMAGE_NOT_CACHED",
+              code: 'IMAGE_NOT_CACHED',
               message:
-                "This image is not yet cached. Use /api/v1/proxy?url=<encoded-notion-url> to cache it first, then access it via this clean URL.",
+                'This image is not yet cached. Use /api/v1/proxy?url=<encoded-notion-url> to cache it first, then access it via this clean URL.',
               requestId: request.requestId,
             },
           });
@@ -172,18 +158,13 @@ export async function imageRoutes(fastify: FastifyInstance) {
       let height: number | undefined;
 
       try {
-        const optimized = await optimizeImage(
-          fetchResult.data,
-          requestedTransform,
-        );
+        const optimized = await optimizeImage(fetchResult.data, requestedTransform);
         outputData = optimized.data;
         outputContentType = optimized.contentType;
         width = optimized.width;
         height = optimized.height;
       } catch {
-        request.log.warn(
-          "Image optimization failed on clean URL route, serving original",
-        );
+        request.log.warn('Image optimization failed on clean URL route, serving original');
       }
 
       const metadata: ImageMetadata = {
@@ -201,7 +182,7 @@ export async function imageRoutes(fastify: FastifyInstance) {
       };
 
       storage.put(cacheKey, outputData, metadata).catch((err) => {
-        request.log.error({ err }, "Failed to store in L3");
+        request.log.error({ err }, 'Failed to store in L3');
       });
 
       if (edgeCache) {
@@ -218,13 +199,7 @@ export async function imageRoutes(fastify: FastifyInstance) {
           .catch(() => {});
       }
 
-      return sendResponse(
-        reply,
-        outputData,
-        outputContentType,
-        "ORIGIN",
-        fetchResult.originalSize,
-      );
+      return sendResponse(reply, outputData, outputContentType, 'ORIGIN', fetchResult.originalSize);
     },
   );
 }
@@ -237,25 +212,20 @@ function sendResponse(
   originalSize?: number,
 ) {
   reply
-    .header("Content-Type", contentType)
-    .header("Content-Length", data.length)
-    .header(
-      "Cache-Control",
-      "public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600",
-    )
-    .header("X-Cache", cacheTier === "ORIGIN" ? "MISS" : "HIT")
-    .header("X-Cache-Tier", cacheTier)
-    .header("X-Optimized-Size", String(data.length));
+    .header('Content-Type', contentType)
+    .header('Content-Length', data.length)
+    .header('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600')
+    .header('X-Cache', cacheTier === 'ORIGIN' ? 'MISS' : 'HIT')
+    .header('X-Cache-Tier', cacheTier)
+    .header('X-Optimized-Size', String(data.length));
 
   if (originalSize !== undefined) {
-    reply.header("X-Original-Size", String(originalSize));
+    reply.header('X-Original-Size', String(originalSize));
   }
 
   return reply.send(data);
 }
 
 function containsPathTraversal(segment: string): boolean {
-  return (
-    segment.includes("..") || segment.includes("/") || segment.includes("\\")
-  );
+  return segment.includes('..') || segment.includes('/') || segment.includes('\\');
 }
