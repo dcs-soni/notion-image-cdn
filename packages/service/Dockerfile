@@ -11,7 +11,7 @@ FROM oven/bun:1 AS builder
 WORKDIR /app
 
 # Copy workspace root files
-COPY package.json bun.lockb* turbo.json tsconfig.base.json ./
+COPY package.json bun.lock turbo.json tsconfig.base.json ./
 
 # Copy service package files
 COPY packages/service/package.json ./packages/service/
@@ -23,7 +23,7 @@ RUN bun install --frozen-lockfile
 COPY packages/service/ ./packages/service/
 
 # Build TypeScript
-RUN cd packages/service && bun build src/index.ts --outdir dist --target bun
+RUN cd packages/service && npx tsc -p tsconfig.build.json
 
 # --- Stage 2: Production ---
 FROM oven/bun:1-alpine AS production

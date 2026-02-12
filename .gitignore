@@ -30,8 +30,8 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Cache
-cache/
+# Cache (runtime image cache)
+/cache/
 .cache/
 
 # Test coverage
