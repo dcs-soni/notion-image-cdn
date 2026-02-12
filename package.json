@@ -1,6 +1,7 @@
 {
   "name": "notion-image-cdn",
   "version": "1.0.0",
+  "packageManager": "bun@1.2.2",
   "private": true,
   "description": "A standalone microservice + NPM SDK that solves Notion's expiring image URL problem",
   "author": "Divyanshu Soni",
