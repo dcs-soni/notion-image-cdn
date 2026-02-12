@@ -48,6 +48,10 @@
     "s3",
     "cache"
   ],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "license": "MIT",
   "author": "Divyanshu Soni",
   "repository": {
