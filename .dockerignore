@@ -1,0 +1,21 @@
+# Exclude dependencies (Docker installs its own)
+node_modules
+packages/*/node_modules
+
+# Exclude build artifacts
+dist/
+packages/*/dist/
+packages/*/coverage/
+tsconfig.tsbuildinfo
+
+# Exclude tools/logs
+.git
+.turbo
+.cache
+cache/
+*.log
+.DS_Store
+
+# Exclude env files (secrets)
+.env*
+!*.example

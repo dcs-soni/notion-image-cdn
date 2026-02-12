@@ -24,7 +24,7 @@ RUN bun install --frozen-lockfile
 COPY packages/service/ ./packages/service/
 
 # Build TypeScript
-RUN cd packages/service && npx tsc -p tsconfig.build.json
+RUN cd packages/service && bunx tsc -p tsconfig.build.json
 
 # --- Stage 2: Production ---
 FROM oven/bun:1-alpine AS production
