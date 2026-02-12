@@ -6,7 +6,7 @@
 // without changing any business logic.
 // =============================================================================
 
-import type { ImageMetadata } from "../types/index.js";
+import type { ImageMetadata } from '../types/index.js';
 
 export interface StorageGetResult {
   /** Raw image data */

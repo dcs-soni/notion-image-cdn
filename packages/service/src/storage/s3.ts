@@ -12,9 +12,9 @@ import {
   DeleteObjectCommand,
   ListObjectsV2Command,
   HeadObjectCommand,
-} from "@aws-sdk/client-s3";
-import type { ImageMetadata } from "../types/index.js";
-import type { StorageBackend, StorageGetResult } from "./interface.js";
+} from '@aws-sdk/client-s3';
+import type { ImageMetadata } from '../types/index.js';
+import type { StorageBackend, StorageGetResult } from './interface.js';
 
 export interface S3StorageOptions {
   bucket: string;
@@ -33,10 +33,10 @@ export class S3Storage implements StorageBackend {
 
   constructor(options: S3StorageOptions) {
     this.bucket = options.bucket;
-    this.keyPrefix = options.keyPrefix ?? "images/";
+    this.keyPrefix = options.keyPrefix ?? 'images/';
 
     this.client = new S3Client({
-      region: options.region ?? "auto",
+      region: options.region ?? 'auto',
       endpoint: options.endpoint,
       credentials: {
         accessKeyId: options.accessKeyId,
@@ -109,7 +109,7 @@ export class S3Storage implements StorageBackend {
         ContentType: metadata.contentType,
         Metadata: serializeMetadata(metadata),
         // Cache-Control on the S3 object itself (not the CDN layer)
-        CacheControl: "public, max-age=2592000", // 30 days
+        CacheControl: 'public, max-age=2592000', // 30 days
       }),
     );
   }
@@ -179,7 +179,7 @@ export class S3Storage implements StorageBackend {
 
   private resolveKey(key: string): string {
     // Sanitize key to prevent path traversal
-    const sanitized = key.replace(/\.\./g, "").replace(/\/+/g, "/");
+    const sanitized = key.replace(/\.\./g, '').replace(/\/+/g, '/');
     return `${this.keyPrefix}${sanitized}`;
   }
 }
@@ -187,46 +187,45 @@ export class S3Storage implements StorageBackend {
 /** Serialize ImageMetadata into S3 custom metadata (all values must be strings) */
 function serializeMetadata(meta: ImageMetadata): Record<string, string> {
   return {
-    "x-original-url": meta.originalUrl,
-    "x-content-type": meta.contentType,
-    "x-original-size": String(meta.originalSize),
-    "x-cached-size": String(meta.cachedSize),
-    "x-width": String(meta.width ?? ""),
-    "x-height": String(meta.height ?? ""),
-    "x-workspace-id": meta.workspaceId ?? "",
-    "x-block-id": meta.blockId ?? "",
-    "x-cached-at": meta.cachedAt,
-    "x-access-count": String(meta.accessCount),
+    'x-original-url': meta.originalUrl,
+    'x-content-type': meta.contentType,
+    'x-original-size': String(meta.originalSize),
+    'x-cached-size': String(meta.cachedSize),
+    'x-width': String(meta.width ?? ''),
+    'x-height': String(meta.height ?? ''),
+    'x-workspace-id': meta.workspaceId ?? '',
+    'x-block-id': meta.blockId ?? '',
+    'x-cached-at': meta.cachedAt,
+    'x-access-count': String(meta.accessCount),
   };
 }
 
 /** Deserialize S3 custom metadata back into ImageMetadata */
 function deserializeMetadata(raw: Record<string, string>): ImageMetadata {
   return {
-    originalUrl: raw["x-original-url"] ?? "",
-    contentType: raw["x-content-type"] ?? "application/octet-stream",
-    originalSize: parseInt(raw["x-original-size"] ?? "0", 10),
-    cachedSize: parseInt(raw["x-cached-size"] ?? "0", 10),
-    width: raw["x-width"] ? parseInt(raw["x-width"], 10) : undefined,
-    height: raw["x-height"] ? parseInt(raw["x-height"], 10) : undefined,
-    workspaceId: raw["x-workspace-id"] || undefined,
-    blockId: raw["x-block-id"] || undefined,
-    cachedAt: raw["x-cached-at"] ?? new Date().toISOString(),
+    originalUrl: raw['x-original-url'] ?? '',
+    contentType: raw['x-content-type'] ?? 'application/octet-stream',
+    originalSize: parseInt(raw['x-original-size'] ?? '0', 10),
+    cachedSize: parseInt(raw['x-cached-size'] ?? '0', 10),
+    width: raw['x-width'] ? parseInt(raw['x-width'], 10) : undefined,
+    height: raw['x-height'] ? parseInt(raw['x-height'], 10) : undefined,
+    workspaceId: raw['x-workspace-id'] || undefined,
+    blockId: raw['x-block-id'] || undefined,
+    cachedAt: raw['x-cached-at'] ?? new Date().toISOString(),
     lastAccessedAt: new Date().toISOString(),
-    accessCount: parseInt(raw["x-access-count"] ?? "0", 10),
+    accessCount: parseInt(raw['x-access-count'] ?? '0', 10),
   };
 }
 
 /** Check if an error is an S3 "not found" error */
 function isS3NotFoundError(err: unknown): boolean {
-  if (err && typeof err === "object") {
+  if (err && typeof err === 'object') {
     const e = err as Record<string, unknown>;
     return (
-      e["$metadata"] !== undefined &&
-      ((e as { $metadata: { httpStatusCode?: number } })["$metadata"]
-        .httpStatusCode === 404 ||
-        (e as { name?: string }).name === "NoSuchKey" ||
-        (e as { name?: string }).name === "NotFound")
+      e['$metadata'] !== undefined &&
+      ((e as { $metadata: { httpStatusCode?: number } })['$metadata'].httpStatusCode === 404 ||
+        (e as { name?: string }).name === 'NoSuchKey' ||
+        (e as { name?: string }).name === 'NotFound')
     );
   }
   return false;

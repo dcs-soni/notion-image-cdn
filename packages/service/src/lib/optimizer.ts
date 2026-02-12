@@ -11,8 +11,8 @@
 // The pipeline is designed to be stateless: input Buffer → output Buffer.
 // =============================================================================
 
-import sharp from "sharp";
-import type { TransformOptions } from "../types/index.js";
+import sharp from 'sharp';
+import type { TransformOptions } from '../types/index.js';
 
 export interface OptimizeResult {
   data: Buffer;
@@ -35,7 +35,7 @@ export async function optimizeImage(
     const metadata = await sharp(input).metadata();
     return {
       data: input,
-      contentType: formatToContentType(metadata.format ?? "unknown"),
+      contentType: formatToContentType(metadata.format ?? 'unknown'),
       width: metadata.width,
       height: metadata.height,
     };
@@ -43,7 +43,7 @@ export async function optimizeImage(
 
   let pipeline = sharp(input, {
     // Fail on invalid input rather than silently producing garbage
-    failOn: "error",
+    failOn: 'error',
     // Limit input size to prevent decompression bombs
     limitInputPixels: 268402689, // ~16384x16384 pixels
   });
@@ -53,29 +53,29 @@ export async function optimizeImage(
     pipeline = pipeline.resize({
       width: options.width,
       height: options.height,
-      fit: options.fit ?? "inside",
+      fit: options.fit ?? 'inside',
       withoutEnlargement: true, // Never upscale — only downscale
     });
   }
 
   // Apply format conversion
   const quality = options.quality ?? 80;
-  const format = options.format ?? "original";
+  const format = options.format ?? 'original';
 
   switch (format) {
-    case "webp":
+    case 'webp':
       pipeline = pipeline.webp({ quality, effort: 4 });
       break;
-    case "avif":
+    case 'avif':
       pipeline = pipeline.avif({ quality, effort: 4 });
       break;
-    case "png":
+    case 'png':
       pipeline = pipeline.png({ compressionLevel: 6 });
       break;
-    case "jpeg":
+    case 'jpeg':
       pipeline = pipeline.jpeg({ quality, mozjpeg: true });
       break;
-    case "original":
+    case 'original':
     default:
       // Keep original format, just apply quality if format is lossy
       break;
@@ -89,9 +89,7 @@ export async function optimizeImage(
 
   return {
     data,
-    contentType: formatToContentType(
-      format === "original" ? info.format : format,
-    ),
+    contentType: formatToContentType(format === 'original' ? info.format : format),
     width: info.width,
     height: info.height,
   };
@@ -103,65 +101,63 @@ export async function optimizeImage(
  */
 export function negotiateFormat(
   acceptHeader: string | undefined,
-  requestedFormat?: TransformOptions["format"],
-): TransformOptions["format"] {
+  requestedFormat?: TransformOptions['format'],
+): TransformOptions['format'] {
   // Explicit format request takes priority
-  if (requestedFormat && requestedFormat !== "original") {
+  if (requestedFormat && requestedFormat !== 'original') {
     return requestedFormat;
   }
 
-  if (!acceptHeader) return "original";
+  if (!acceptHeader) return 'original';
 
   // Prefer AVIF > WebP > original (in order of compression efficiency)
-  if (acceptHeader.includes("image/avif")) return "avif";
-  if (acceptHeader.includes("image/webp")) return "webp";
+  if (acceptHeader.includes('image/avif')) return 'avif';
+  if (acceptHeader.includes('image/webp')) return 'webp';
 
-  return "original";
+  return 'original';
 }
 
 /** Parse and validate transform options from query parameters */
-export function parseTransformOptions(
-  query: Record<string, unknown>,
-): TransformOptions {
+export function parseTransformOptions(query: Record<string, unknown>): TransformOptions {
   const options: TransformOptions = {};
 
   // Width: 1–10000 pixels
-  if (query["w"] !== undefined) {
-    const w = parseInt(String(query["w"]), 10);
+  if (query['w'] !== undefined) {
+    const w = parseInt(String(query['w']), 10);
     if (!isNaN(w) && w >= 1 && w <= 10000) {
       options.width = w;
     }
   }
 
   // Height: 1–10000 pixels
-  if (query["h"] !== undefined) {
-    const h = parseInt(String(query["h"]), 10);
+  if (query['h'] !== undefined) {
+    const h = parseInt(String(query['h']), 10);
     if (!isNaN(h) && h >= 1 && h <= 10000) {
       options.height = h;
     }
   }
 
   // Format
-  if (query["fmt"] !== undefined) {
-    const fmt = String(query["fmt"]).toLowerCase();
-    if (["webp", "avif", "png", "jpeg"].includes(fmt)) {
-      options.format = fmt as TransformOptions["format"];
+  if (query['fmt'] !== undefined) {
+    const fmt = String(query['fmt']).toLowerCase();
+    if (['webp', 'avif', 'png', 'jpeg'].includes(fmt)) {
+      options.format = fmt as TransformOptions['format'];
     }
   }
 
   // Quality: 1–100
-  if (query["q"] !== undefined) {
-    const q = parseInt(String(query["q"]), 10);
+  if (query['q'] !== undefined) {
+    const q = parseInt(String(query['q']), 10);
     if (!isNaN(q) && q >= 1 && q <= 100) {
       options.quality = q;
     }
   }
 
   // Fit mode
-  if (query["fit"] !== undefined) {
-    const fit = String(query["fit"]).toLowerCase();
-    if (["cover", "contain", "fill", "inside", "outside"].includes(fit)) {
-      options.fit = fit as TransformOptions["fit"];
+  if (query['fit'] !== undefined) {
+    const fit = String(query['fit']).toLowerCase();
+    if (['cover', 'contain', 'fill', 'inside', 'outside'].includes(fit)) {
+      options.fit = fit as TransformOptions['fit'];
     }
   }
 
@@ -173,7 +169,7 @@ function isEmptyTransform(options: TransformOptions): boolean {
   return (
     options.width === undefined &&
     options.height === undefined &&
-    (options.format === undefined || options.format === "original") &&
+    (options.format === undefined || options.format === 'original') &&
     options.quality === undefined &&
     options.fit === undefined
   );
@@ -182,14 +178,14 @@ function isEmptyTransform(options: TransformOptions): boolean {
 /** Map Sharp format strings to MIME content types */
 function formatToContentType(format: string): string {
   const map: Record<string, string> = {
-    webp: "image/webp",
-    avif: "image/avif",
-    png: "image/png",
-    jpeg: "image/jpeg",
-    jpg: "image/jpeg",
-    gif: "image/gif",
-    svg: "image/svg+xml",
-    tiff: "image/tiff",
+    webp: 'image/webp',
+    avif: 'image/avif',
+    png: 'image/png',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    gif: 'image/gif',
+    svg: 'image/svg+xml',
+    tiff: 'image/tiff',
   };
-  return map[format] ?? "application/octet-stream";
+  return map[format] ?? 'application/octet-stream';
 }

@@ -35,11 +35,11 @@ export interface TransformOptions {
   /** Target height in pixels */
   height?: number;
   /** Output format */
-  format?: "webp" | "avif" | "png" | "jpeg" | "original";
+  format?: 'webp' | 'avif' | 'png' | 'jpeg' | 'original';
   /** Output quality (1-100) */
   quality?: number;
   /** Fit mode for resizing */
-  fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+  fit?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside';
 }
 
 /** Parsed components of a Notion S3 image URL */
@@ -80,13 +80,13 @@ export interface ErrorResponse {
 
 /** Health check response */
 export interface HealthResponse {
-  status: "ok" | "degraded" | "error";
+  status: 'ok' | 'degraded' | 'error';
   version: string;
   uptime: number;
   timestamp: string;
   checks: {
-    storage: "ok" | "error";
-    cache: "ok" | "error" | "disabled";
+    storage: 'ok' | 'error';
+    cache: 'ok' | 'error' | 'disabled';
   };
 }
 
@@ -100,4 +100,4 @@ export interface StatsResponse {
 }
 
 /** Cache tier indicator */
-export type CacheTier = "L1_BROWSER" | "L2_EDGE" | "L3_PERSISTENT" | "ORIGIN";
+export type CacheTier = 'L1_BROWSER' | 'L2_EDGE' | 'L3_PERSISTENT' | 'ORIGIN';

@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: packages/service/Dockerfile
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - NODE_ENV=development
       - PORT=3001
@@ -36,7 +36,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     command: >
       redis-server
       --maxmemory 256mb
@@ -44,7 +44,7 @@ services:
       --save ""
       --requirepass ""
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,8 +58,8 @@ services:
   minio:
     image: minio/minio
     ports:
-      - "9000:9000"
-      - "9001:9001" # Console
+      - '9000:9000'
+      - '9001:9001' # Console
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
