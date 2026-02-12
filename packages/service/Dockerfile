@@ -13,8 +13,9 @@ WORKDIR /app
 # Copy workspace root files
 COPY package.json bun.lock turbo.json tsconfig.base.json ./
 
-# Copy service package files
+# Copy all workspace package.json files (lockfile expects both packages)
 COPY packages/service/package.json ./packages/service/
+COPY packages/sdk/package.json ./packages/sdk/
 
 # Install ALL dependencies (including devDependencies for build)
 RUN bun install --frozen-lockfile
