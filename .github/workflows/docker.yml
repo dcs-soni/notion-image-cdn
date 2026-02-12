@@ -1,0 +1,62 @@
+# =============================================================================
+# Docker — Build Verification
+# =============================================================================
+# Verifies that the Docker image builds successfully.
+# Runs only when service code, Dockerfiles, or docker-compose change.
+# Does NOT push to any registry — this is a build check only.
+# =============================================================================
+
+name: Docker Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/service/**'
+      - 'docker-compose.yml'
+      - '**/Dockerfile'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig.base.json'
+      - 'turbo.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/service/**'
+      - 'docker-compose.yml'
+      - '**/Dockerfile'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig.base.json'
+      - 'turbo.json'
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Setup Docker Buildx ──────────────────────────────────────────
+      # Buildx enables layer caching via GitHub Actions cache backend.
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── 3. Build image (verify only, no push) ──────────────────────────
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/service/Dockerfile
+          push: false
+          tags: notion-image-cdn:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

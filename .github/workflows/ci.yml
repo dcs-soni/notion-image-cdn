@@ -1,0 +1,74 @@
+# =============================================================================
+# CI — Lint, Build, Test
+# =============================================================================
+# Runs on every push and on pull requests targeting main.
+# Uses Bun runtime + Turborepo for orchestration.
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+# Cancel redundant runs on the same branch (e.g. rapid pushes, force-pushes).
+# PRs get their own group so they don't cancel branch pushes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint → Build → Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Setup Bun ────────────────────────────────────────────────────
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # ── 3. Cache Bun dependencies ───────────────────────────────────────
+      # Caches the global Bun module cache for faster installs.
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      # ── 4. Cache Turborepo ──────────────────────────────────────────────
+      # Turborepo's local file-system cache for incremental builds.
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('bun.lock') }}-
+            turbo-${{ runner.os }}-
+
+      # ── 5. Install dependencies ─────────────────────────────────────────
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # ── 6. Lint ─────────────────────────────────────────────────────────
+      - name: Lint
+        run: bun run lint
+
+      # ── 7. Build ────────────────────────────────────────────────────────
+      - name: Build
+        run: bun run build
+
+      # ── 8. Test ─────────────────────────────────────────────────────────
+      - name: Test
+        run: bun run test
