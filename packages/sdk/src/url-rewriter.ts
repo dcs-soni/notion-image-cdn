@@ -1,23 +1,23 @@
-// =============================================================================
 // URL Rewriter — Core SDK Logic
-// =============================================================================
+
 // Transforms Notion's expiring S3 URLs into permanent CDN URLs.
 // This is pure string manipulation — zero runtime dependencies, zero side effects.
 //
 // Input:  https://prod-files-secure.s3.us-west-2.amazonaws.com/abc/def/photo.jpg?X-Amz-...
 // Output: https://notion-cdn.example.com/img/abc/def/photo.jpg?w=800&fmt=webp&q=85
-// =============================================================================
 
 import type { OptimizeUrlOptions } from './types';
 
 /**
- * Known Notion S3 hostnames.
+ * Known Notion image hostnames.
  * URLs from these hosts are rewritten to use the CDN.
  * All other URLs are returned unchanged.
  */
 const NOTION_S3_HOSTS = new Set([
   'prod-files-secure.s3.us-west-2.amazonaws.com',
   's3.us-west-2.amazonaws.com',
+  'file.notion.so',
+  'img.notionusercontent.com',
 ]);
 
 /**
@@ -86,11 +86,33 @@ interface PathComponents {
 }
 
 function extractPathComponents(hostname: string, pathname: string): PathComponents | null {
+  // img.notionusercontent.com: /s3/prod-files-secure%2F<ws>%2F<id>%2F<file>/size/...
+  if (hostname === 'img.notionusercontent.com') {
+    const topSegments = pathname.split('/').filter(Boolean);
+    if (topSegments.length < 2 || topSegments[0] !== 's3') return null;
+
+    const s3Key = decodeURIComponent(topSegments[1] ?? '');
+    const keyParts = s3Key.split('/').filter(Boolean);
+    if (keyParts[0] === 'prod-files-secure') keyParts.shift();
+    if (keyParts.length < 3) return null;
+
+    return {
+      workspaceId: keyParts[0] ?? '',
+      blockId: keyParts[1] ?? '',
+      filename: keyParts[keyParts.length - 1] ?? '',
+    };
+  }
+
   let relevantPath = pathname;
 
   // Handle path-style S3 URLs: /prod-files-secure/<workspace>/<block>/<filename>
   if (hostname === 's3.us-west-2.amazonaws.com') {
     relevantPath = pathname.replace(/^\/prod-files-secure/, '');
+  }
+
+  // Handle file.notion.so URLs: /f/f/<workspace>/<asset>/<filename>
+  if (hostname === 'file.notion.so') {
+    relevantPath = pathname.replace(/^\/f\/f/, '');
   }
 
   const segments = relevantPath.split('/').filter(Boolean);

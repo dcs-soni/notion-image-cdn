@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
-  PORT: z.coerce.number().int().min(1).max(65535).default(3001),
+  PORT: z.coerce.number().int().min(1).max(65535).default(3002),
   HOST: z.string().default('0.0.0.0'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -20,7 +20,7 @@ const ConfigSchema = z.object({
   ALLOWED_DOMAINS: z
     .string()
     .default(
-      'prod-files-secure.s3.us-west-2.amazonaws.com,s3.us-west-2.amazonaws.com,images.unsplash.com',
+      'prod-files-secure.s3.us-west-2.amazonaws.com,s3.us-west-2.amazonaws.com,file.notion.so,img.notionusercontent.com,images.unsplash.com',
     ),
   MAX_IMAGE_SIZE_BYTES: z.coerce
     .number()
