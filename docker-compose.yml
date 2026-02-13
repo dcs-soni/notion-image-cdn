@@ -1,23 +1,20 @@
-# =============================================================================
 # Docker Compose — Development Environment
-# =============================================================================
+
 # Services:
 #   - service: The Notion Image CDN proxy (built from source)
 #   - redis:   Edge cache (L2)
 #   - minio:   Local S3-compatible storage (optional, for testing S3 backend)
-# =============================================================================
 
 services:
-  # ---------- Notion Image CDN Service ----------
   service:
     build:
       context: .
       dockerfile: packages/service/Dockerfile
     ports:
-      - '3001:3001'
+      - '3002:3002'
     environment:
       - NODE_ENV=development
-      - PORT=3001
+      - PORT=3002
       - LOG_LEVEL=debug
       - STORAGE_BACKEND=fs
       - CACHE_DIR=/data/cache
@@ -32,7 +29,6 @@ services:
     networks:
       - notion-cdn
 
-  # ---------- Redis (L2 Edge Cache) ----------
   redis:
     image: redis:7-alpine
     ports:
@@ -54,7 +50,6 @@ services:
     networks:
       - notion-cdn
 
-  # ---------- MinIO (Local S3, optional) ----------
   minio:
     image: minio/minio
     ports:
