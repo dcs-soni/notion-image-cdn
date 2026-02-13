@@ -1,11 +1,9 @@
-// =============================================================================
 // Clean URL Route — GET /img/:workspaceId/:blockId/:filename
-// =============================================================================
+
 // Provides permanent, human-readable URLs for Notion images.
 // These URLs never change — even when the underlying S3 signed URL expires.
 //
 // The route reconstructs the S3 path and delegates to the same proxy logic.
-// =============================================================================
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { fetchUpstreamImage, isFetchError } from '../lib/fetcher.js';
@@ -31,7 +29,6 @@ export async function imageRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest<{ Params: ImageParams }>, reply: FastifyReply) => {
       const { workspaceId, blockId, filename } = request.params;
 
-      // Basic param validation
       if (!workspaceId || !blockId || !filename) {
         return reply.status(400).send({
           error: {
@@ -43,7 +40,6 @@ export async function imageRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // Validate params don't contain path traversal
       if (
         containsPathTraversal(workspaceId) ||
         containsPathTraversal(blockId) ||
@@ -59,7 +55,6 @@ export async function imageRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // ---------- Parse Transform Options ----------
       const query = request.query as Record<string, unknown>;
       const requestedTransform = parseTransformOptions(query);
 
@@ -68,13 +63,11 @@ export async function imageRoutes(fastify: FastifyInstance) {
         requestedTransform.format = negotiatedFormat;
       }
 
-      // ---------- Cache Lookup ----------
       // Cache key is based on path components (stable, not expiring)
       const cacheBaseUrl = `${NOTION_S3_HOST}/${workspaceId}/${blockId}/${filename}`;
       const cacheKey = generateCacheKey(cacheBaseUrl, requestedTransform);
       let cacheTier: CacheTier = 'ORIGIN';
 
-      // L2: Edge cache
       const edgeCache = fastify.edgeCache;
       if (edgeCache) {
         const l2Hit = await edgeCache.get(cacheKey);
@@ -84,7 +77,6 @@ export async function imageRoutes(fastify: FastifyInstance) {
         }
       }
 
-      // L3: Persistent storage
       const storage = fastify.storage;
       const l3Hit = await storage.get(cacheKey);
       if (l3Hit) {
@@ -108,10 +100,9 @@ export async function imageRoutes(fastify: FastifyInstance) {
       }
 
       // ---------- Cache Miss ----------
-      // We need a valid signed URL to fetch from Notion.
-      // The clean URL doesn't contain S3 signing params, so we attempt
-      // to fetch using the base URL (which may fail if Notion requires signing).
-      // In practice, the image should have been cached via /api/v1/proxy first.
+      // Clean URL doesn't contain S3 signing params, so we attempt
+      // to fetch using the base URL. In practice, the image should
+      // have been cached via /api/v1/proxy first.
       const upstreamUrl = cacheBaseUrl;
       request.log.info(
         { workspaceId, blockId, filename },
@@ -151,7 +142,6 @@ export async function imageRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // Optimize and cache
       let outputData: Buffer = fetchResult.data;
       let outputContentType: string = fetchResult.contentType;
       let width: number | undefined;

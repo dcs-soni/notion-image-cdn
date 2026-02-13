@@ -1,10 +1,8 @@
-// =============================================================================
 // Server Factory
-// =============================================================================
+
 // Creates and configures the Fastify server instance. Separated from the
 // entrypoint (index.ts) for testability — tests can create their own server
 // instances without starting the HTTP listener.
-// =============================================================================
 
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCors from '@fastify/cors';
@@ -24,7 +22,6 @@ import type { StorageBackend } from './storage/interface.js';
 import { MemoryCache, type EdgeCache } from './cache/memory.js';
 import { RedisCache } from './cache/redis.js';
 
-// Extend Fastify with our custom decorations
 declare module 'fastify' {
   interface FastifyInstance {
     config: ResolvedConfig;
@@ -40,12 +37,10 @@ declare module 'fastify' {
 export async function createServer(
   overrideConfig?: Partial<ResolvedConfig>,
 ): Promise<FastifyInstance> {
-  // Load and validate configuration
   const config = overrideConfig
     ? ({ ...loadConfig(), ...overrideConfig } as ResolvedConfig)
     : loadConfig();
 
-  // Create Fastify instance with Pino logging
   const server = Fastify({
     logger: {
       level: config.LOG_LEVEL,
@@ -62,21 +57,14 @@ export async function createServer(
     bodyLimit: 1024 * 1024, // 1MB
   });
 
-  // ---------- Decorators ----------
-  // Make config and services available to all route handlers
   server.decorate('config', config);
 
-  // Initialize storage backend
   const storage = createStorageBackend(config);
   server.decorate('storage', storage);
 
-  // Initialize edge cache (L2)
   const edgeCache = createEdgeCache(config, server);
   server.decorate('edgeCache', edgeCache);
 
-  // ---------- Plugins ----------
-
-  // CORS
   await server.register(fastifyCors, {
     origin: config.corsOrigins.includes('*') ? true : config.corsOrigins,
     methods: ['GET', 'DELETE', 'OPTIONS'],
@@ -91,7 +79,6 @@ export async function createServer(
     maxAge: 86400,
   });
 
-  // Rate limiting
   await server.register(fastifyRateLimit, {
     max: config.RATE_LIMIT_PER_MINUTE,
     timeWindow: '1 minute',
@@ -109,27 +96,21 @@ export async function createServer(
     }),
   });
 
-  // Security headers
   await server.register(securityHeadersPlugin);
 
-  // Request ID
   await server.register(requestIdPlugin);
 
-  // Auth (skips if API_KEYS_ENABLED=false)
   await server.register(authPlugin, { config });
 
-  // ---------- Routes ----------
   await server.register(healthRoutes);
   await server.register(proxyRoutes);
   await server.register(imageRoutes);
   await server.register(cacheRoutes);
 
-  // ---------- Error Handler ----------
   server.setErrorHandler((error: Error & { statusCode?: number }, request, reply) => {
     const requestId =
       'requestId' in request ? (request as unknown as { requestId: string }).requestId : 'unknown';
 
-    // Log the full error server-side
     request.log.error({ err: error, requestId }, 'Unhandled error');
 
     // Don't leak internal error details to clients
@@ -144,7 +125,6 @@ export async function createServer(
     });
   });
 
-  // ---------- Not Found Handler ----------
   server.setNotFoundHandler((request, reply) => {
     const requestId =
       'requestId' in request ? (request as unknown as { requestId: string }).requestId : 'unknown';
@@ -161,10 +141,6 @@ export async function createServer(
 
   return server;
 }
-
-// =============================================================================
-// Factory functions for storage and cache
-// =============================================================================
 
 function createStorageBackend(config: ResolvedConfig): StorageBackend {
   switch (config.STORAGE_BACKEND) {
@@ -199,7 +175,6 @@ function createEdgeCache(config: ResolvedConfig, server: FastifyInstance): EdgeC
     const redis = new RedisCache(config.REDIS_URL);
     server.log.info('Edge cache: Redis');
 
-    // Clean up Redis connection on server close
     server.addHook('onClose', async () => {
       await redis.disconnect();
     });

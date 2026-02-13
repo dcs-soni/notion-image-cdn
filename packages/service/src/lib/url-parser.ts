@@ -1,6 +1,5 @@
-// =============================================================================
 // Notion URL Parser
-// =============================================================================
+
 // Parses Notion's pre-signed S3 URLs to extract workspace ID, block ID,
 // and filename. These components are used for:
 //   1. Clean URL routing: /img/:workspaceId/:blockId/:filename
@@ -10,20 +9,14 @@
 // Notion S3 URL format:
 //   https://prod-files-secure.s3.us-west-2.amazonaws.com/<workspaceId>/<blockId>/<filename>?X-Amz-...
 //   https://s3.us-west-2.amazonaws.com/prod-files-secure/<workspaceId>/<blockId>/<filename>?X-Amz-...
-// =============================================================================
 
 import type { ParsedNotionUrl } from '../types/index.js';
 
-// Known Notion S3 host patterns
 const NOTION_S3_HOSTS = [
   'prod-files-secure.s3.us-west-2.amazonaws.com',
   's3.us-west-2.amazonaws.com',
 ];
 
-/**
- * Parse a Notion S3 URL into its component parts.
- * Returns null if the URL is not a recognized Notion image URL.
- */
 export function parseNotionUrl(rawUrl: string): ParsedNotionUrl | null {
   let parsed: URL;
   try {
@@ -34,12 +27,12 @@ export function parseNotionUrl(rawUrl: string): ParsedNotionUrl | null {
 
   const hostname = parsed.hostname.toLowerCase();
 
-  // Format 1: prod-files-secure.s3.us-west-2.amazonaws.com/<workspaceId>/<blockId>/<filename>
+  //prod-files-secure.s3.us-west-2.amazonaws.com/<workspaceId>/<blockId>/<filename>
   if (hostname === NOTION_S3_HOSTS[0]) {
     return extractFromPathSegments(parsed, parsed.pathname);
   }
 
-  // Format 2: s3.us-west-2.amazonaws.com/prod-files-secure/<workspaceId>/<blockId>/<filename>
+  // s3.us-west-2.amazonaws.com/prod-files-secure/<workspaceId>/<blockId>/<filename>
   if (hostname === NOTION_S3_HOSTS[1]) {
     // Remove the leading "/prod-files-secure" prefix
     const pathWithoutPrefix = parsed.pathname.replace(/^\/prod-files-secure/, '');
@@ -49,15 +42,10 @@ export function parseNotionUrl(rawUrl: string): ParsedNotionUrl | null {
   return null;
 }
 
-/**
- * Extract workspace ID, block ID, and filename from URL path segments.
- * Expected format: /<workspaceId>/<blockId>/<filename>
- */
 function extractFromPathSegments(parsedUrl: URL, pathname: string): ParsedNotionUrl | null {
-  // Split path and filter empty segments
   const segments = pathname.split('/').filter(Boolean);
 
-  // We need at least 3 segments: workspaceId, blockId, filename
+  // workspaceId, blockId, filename
   if (segments.length < 3) {
     return null;
   }
@@ -67,7 +55,6 @@ function extractFromPathSegments(parsedUrl: URL, pathname: string): ParsedNotion
   // Filename might contain subdirectory paths, take the last segment
   const filename = decodeURIComponent(segments[segments.length - 1] ?? '');
 
-  // Basic validation: IDs should look like UUIDs or hex strings
   if (!workspaceId || !blockId || !filename) {
     return null;
   }
@@ -97,7 +84,6 @@ export function reconstructNotionPath(
   blockId: string,
   filename: string,
 ): string {
-  // Encode components for URL safety
   const encodedWorkspace = encodeURIComponent(workspaceId);
   const encodedBlock = encodeURIComponent(blockId);
   const encodedFilename = encodeURIComponent(filename);

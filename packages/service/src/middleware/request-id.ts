@@ -1,10 +1,8 @@
-// =============================================================================
 // Request ID Middleware
-// =============================================================================
+
 // Attaches a unique request ID to every incoming request for distributed
 // tracing and audit logging. Uses crypto.randomUUID() for cryptographic
 // uniqueness — no collision risk.
-// =============================================================================
 
 import { randomUUID } from 'node:crypto';
 import type { FastifyPluginCallback } from 'fastify';
@@ -26,10 +24,8 @@ const requestIdPlugin: FastifyPluginCallback = (fastify, _opts, done) => {
         ? existingId
         : randomUUID();
 
-    // Attach to request for access in route handlers and logging
     request.requestId = requestId;
 
-    // Echo back in response for client-side correlation
     reply.header('X-Request-Id', requestId);
   });
 

@@ -1,10 +1,3 @@
-// =============================================================================
-// Cache Management Routes
-// =============================================================================
-// DELETE /api/v1/cache — Purge cached images
-// GET    /api/v1/stats — Usage statistics
-// =============================================================================
-
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { generateCachePrefix } from '../lib/cache-key.js';
 
@@ -76,10 +69,6 @@ export async function cacheRoutes(fastify: FastifyInstance) {
     }
   });
 
-  /**
-   * GET /api/v1/stats
-   * Basic usage statistics.
-   */
   fastify.get('/api/v1/stats', async (_request: FastifyRequest, reply: FastifyReply) => {
     // Basic stats — will be enhanced with actual metrics in Phase 4
     return reply.status(200).send({

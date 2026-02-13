@@ -1,15 +1,13 @@
-// =============================================================================
-// URL Validator — Security Layers 1 & 2
-// =============================================================================
-// Layer 1: Domain allowlist — only Notion S3 / approved domains can be proxied
-// Layer 2: HTTPS-only — reject any non-HTTPS upstream URL
+// URL Validator
+
+// Domain allowlist — only Notion S3 / approved domains can be proxied
+// HTTPS-only — reject any non-HTTPS upstream URL
 //
 // Uses URL constructor (not regex) for safe parsing. Rejects URLs that:
 // - Use non-HTTPS protocol
 // - Target a domain not in the allowlist
 // - Exceed maximum length (prevent memory abuse)
 // - Contain authentication credentials in the URL
-// =============================================================================
 
 const MAX_URL_LENGTH = 4096;
 
@@ -19,10 +17,6 @@ export interface ValidationResult {
   errorCode?: string;
 }
 
-/**
- * Validate that an image URL is safe to proxy.
- * Returns { valid: true } if OK, or { valid: false, error, errorCode } if not.
- */
 export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): ValidationResult {
   // Check URL length before parsing (prevent ReDoS / memory attacks)
   if (!rawUrl || rawUrl.length === 0) {
@@ -37,7 +31,6 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
     };
   }
 
-  // Parse URL safely — URL constructor throws on malformed input
   let parsed: URL;
   try {
     parsed = new URL(rawUrl);
@@ -49,7 +42,7 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
     };
   }
 
-  // Layer 2: HTTPS-only (prevent downgrade attacks, MitM)
+  // HTTPS-only (prevent downgrade attacks, MitM)
   if (parsed.protocol !== 'https:') {
     return {
       valid: false,
@@ -58,7 +51,6 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
     };
   }
 
-  // Security: Reject URLs with embedded credentials (user:pass@host)
   if (parsed.username || parsed.password) {
     return {
       valid: false,
@@ -67,7 +59,6 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
     };
   }
 
-  // Security: Reject URLs targeting private/internal IPs
   const hostname = parsed.hostname.toLowerCase();
   if (isPrivateHost(hostname)) {
     return {
@@ -77,7 +68,6 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
     };
   }
 
-  // Layer 1: Domain allowlist
   if (!allowedDomains.has(hostname)) {
     return {
       valid: false,
@@ -97,7 +87,6 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
  * (e.g., 127.1), and covers all RFC 1918 / RFC 5735 ranges.
  */
 function isPrivateHost(hostname: string): boolean {
-  // ---- Hostname-based checks (fast path) ----
   if (hostname === 'localhost') return true;
 
   // Internal TLDs
@@ -105,7 +94,7 @@ function isPrivateHost(hostname: string): boolean {
     return true;
   }
 
-  // ---- IPv6 checks ----
+  //  IPv6 checks
   // Strip brackets that URL parser may leave: [::1] → ::1
   const bareHost =
     hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
@@ -120,7 +109,7 @@ function isPrivateHost(hostname: string): boolean {
     if (ip !== null && isPrivateIPv4(ip)) return true;
   }
 
-  // ---- IPv4 checks (numeric, covers short-form like 127.1) ----
+  // IPv4 checks (numeric, covers short-form like 127.1)
   const ip = parseIPv4(hostname);
   if (ip !== null && isPrivateIPv4(ip)) return true;
 

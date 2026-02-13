@@ -1,6 +1,5 @@
-// =============================================================================
 // Proxy Route — GET /api/v1/proxy
-// =============================================================================
+
 // Primary endpoint: accepts an encoded Notion S3 URL and returns the image.
 //
 // Flow:
@@ -11,7 +10,6 @@
 //   5. Check L3 persistent storage → if HIT, populate L2 and return
 //   6. On MISS: fetch from upstream, validate, optimize, store in L3 + L2
 //   7. Return image with proper Cache-Control and diagnostic headers
-// =============================================================================
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { validateImageUrl } from '../lib/validator.js';
@@ -29,7 +27,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
     const query = request.query as Record<string, unknown>;
     const rawUrl = typeof query['url'] === 'string' ? query['url'] : null;
 
-    // ---------- Input Validation ----------
     if (!rawUrl) {
       return reply.status(400).send({
         error: {
@@ -42,7 +39,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // URL validation (Security Layers 1 & 2)
     const validation = validateImageUrl(rawUrl, config.allowedDomainsSet);
     if (!validation.valid) {
       request.log.warn({ url: rawUrl, error: validation.errorCode }, 'URL validation failed');
@@ -56,23 +52,18 @@ export async function proxyRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // ---------- Parse Transform Options ----------
     const requestedTransform = parseTransformOptions(query);
 
-    // Content negotiation: use Accept header to pick best format
     const negotiatedFormat = negotiateFormat(request.headers.accept, requestedTransform.format);
     if (negotiatedFormat !== 'original') {
       requestedTransform.format = negotiatedFormat;
     }
 
-    // ---------- Cache Lookup ----------
-    // Extract base URL (without S3 signature params) for cache key stability
     const parsed = parseNotionUrl(rawUrl);
     const cacheBaseUrl = parsed?.baseUrl ?? rawUrl.split('?')[0] ?? rawUrl;
     const cacheKey = generateCacheKey(cacheBaseUrl, requestedTransform);
     let cacheTier: CacheTier = 'ORIGIN';
 
-    // L2: Edge cache lookup
     const edgeCache = fastify.edgeCache;
     if (edgeCache) {
       const l2Hit = await edgeCache.get(cacheKey);
@@ -82,7 +73,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
       }
     }
 
-    // L3: Persistent storage lookup
     const storage = fastify.storage;
     const l3Hit = await storage.get(cacheKey);
     if (l3Hit) {
@@ -106,7 +96,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
       return sendImageResponse(reply, l3Hit.data, l3Hit.metadata.contentType, cacheTier);
     }
 
-    // ---------- Cache Miss: Fetch from Upstream ----------
     request.log.info({ url: rawUrl }, 'Cache miss — fetching from upstream');
 
     const fetchResult = await fetchUpstreamImage(rawUrl, {
@@ -130,7 +119,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // ---------- Image Optimization ----------
     let outputData: Buffer = fetchResult.data;
     let outputContentType: string = fetchResult.contentType;
     let width: number | undefined;
@@ -147,7 +135,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
       request.log.warn({ err }, 'Image optimization failed, serving original');
     }
 
-    // ---------- Store in Cache ----------
     const metadata: ImageMetadata = {
       originalUrl: rawUrl,
       contentType: outputContentType,
@@ -167,7 +154,7 @@ export async function proxyRoutes(fastify: FastifyInstance) {
       request.log.error({ err, cacheKey }, 'Failed to store in persistent cache');
     });
 
-    // Store in L2 (edge) — fire-and-forget
+    // Store in L2 (fire-and-forget)
     if (edgeCache) {
       edgeCache
         .set(
@@ -182,7 +169,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
         .catch(() => {});
     }
 
-    // ---------- Respond ----------
     return sendImageResponse(
       reply,
       outputData,
@@ -193,9 +179,6 @@ export async function proxyRoutes(fastify: FastifyInstance) {
   });
 }
 
-/**
- * Send an image response with proper headers.
- */
 function sendImageResponse(
   reply: FastifyReply,
   data: Buffer,

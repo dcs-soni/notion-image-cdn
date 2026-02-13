@@ -1,9 +1,7 @@
-// =============================================================================
 // S3-Compatible Storage Backend
-// =============================================================================
+
 // Works with AWS S3, Cloudflare R2, MinIO, Backblaze B2 — any S3-compatible
 // storage. Metadata is stored as S3 object metadata (custom headers).
-// =============================================================================
 
 import {
   S3Client,
@@ -88,7 +86,6 @@ export class S3Storage implements StorageBackend {
       }
       const data = Buffer.concat(chunks);
 
-      // Extract metadata from S3 custom metadata headers
       const metadata = deserializeMetadata(response.Metadata ?? {});
 
       return { data, metadata };
@@ -128,7 +125,6 @@ export class S3Storage implements StorageBackend {
   async deleteByPrefix(prefix: string): Promise<void> {
     const s3Prefix = this.resolveKey(prefix);
 
-    // List all objects with the prefix, then delete them
     let continuationToken: string | undefined;
 
     do {
@@ -173,12 +169,7 @@ export class S3Storage implements StorageBackend {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Private helpers
-  // ---------------------------------------------------------------------------
-
   private resolveKey(key: string): string {
-    // Sanitize key to prevent path traversal
     const sanitized = key.replace(/\.\./g, '').replace(/\/+/g, '/');
     return `${this.keyPrefix}${sanitized}`;
   }

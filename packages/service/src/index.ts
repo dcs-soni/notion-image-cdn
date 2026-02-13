@@ -1,16 +1,13 @@
-// =============================================================================
 // Application Entrypoint
-// =============================================================================
+
 // Starts the HTTP server with graceful shutdown on SIGTERM/SIGINT.
 // This file should be minimal — all logic lives in server.ts and modules.
-// =============================================================================
 
 import { createServer } from './server.js';
 
 async function main() {
   const server = await createServer();
 
-  // Graceful shutdown handler
   const shutdown = async (signal: string) => {
     server.log.info({ signal }, 'Received shutdown signal, closing gracefully...');
     try {
@@ -26,7 +23,6 @@ async function main() {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
 
-  // Handle uncaught errors
   process.on('unhandledRejection', (reason) => {
     server.log.fatal({ reason }, 'Unhandled promise rejection');
     process.exit(1);
@@ -37,7 +33,6 @@ async function main() {
     process.exit(1);
   });
 
-  // Start listening
   try {
     const config = server.config;
     await server.listen({ port: config.PORT, host: config.HOST });

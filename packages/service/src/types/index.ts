@@ -1,7 +1,3 @@
-// =============================================================================
-// Shared Types — Notion Image CDN Service
-// =============================================================================
-
 /** Metadata stored alongside a cached image in persistent storage */
 export interface ImageMetadata {
   /** Original Notion S3 URL that was fetched */

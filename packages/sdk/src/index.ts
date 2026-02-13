@@ -1,6 +1,4 @@
-// =============================================================================
 // SDK Main Export
-// =============================================================================
 
 export { getOptimizedUrl, isNotionImageUrl } from './url-rewriter';
 export type { OptimizeUrlOptions, PluginConfig, NotionImageProps } from './types';

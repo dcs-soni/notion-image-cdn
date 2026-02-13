@@ -1,7 +1,3 @@
-// =============================================================================
-// Health Check Route — GET /health
-// =============================================================================
-
 import type { FastifyInstance } from 'fastify';
 import type { HealthResponse } from '../types/index.js';
 
@@ -12,7 +8,6 @@ export async function healthRoutes(fastify: FastifyInstance) {
     const storage = fastify.storage;
     const edgeCache = fastify.edgeCache;
 
-    // Check subsystem health
     const [storageHealthy, cacheHealthy] = await Promise.all([
       storage.healthCheck().catch(() => false),
       edgeCache ? edgeCache.healthCheck().catch(() => false) : null,

@@ -7,7 +7,6 @@
 //
 // NOTE: This is a single-process cache. It does NOT share state across
 // multiple server instances. For multi-instance deployments, use Redis.
-// =============================================================================
 
 export interface CacheEntry {
   data: Buffer;
@@ -25,10 +24,7 @@ export interface EdgeCache {
 }
 
 export class MemoryCache implements EdgeCache {
-  private readonly cache = new Map<
-    string,
-    { entry: CacheEntry; expiresAt: number }
-  >();
+  private readonly cache = new Map<string, { entry: CacheEntry; expiresAt: number }>();
   private readonly maxEntries: number;
   private readonly maxTotalBytes: number;
   private currentBytes = 0;
@@ -40,7 +36,7 @@ export class MemoryCache implements EdgeCache {
   }
 
   name(): string {
-    return "memory";
+    return 'memory';
   }
 
   async healthCheck(): Promise<boolean> {
@@ -51,7 +47,6 @@ export class MemoryCache implements EdgeCache {
     const entry = this.cache.get(key);
     if (!entry) return null;
 
-    // Check TTL
     if (Date.now() > entry.expiresAt) {
       this.currentBytes -= entry.entry.data.length;
       this.cache.delete(key);
@@ -66,14 +61,12 @@ export class MemoryCache implements EdgeCache {
   }
 
   async set(key: string, entry: CacheEntry, ttlSeconds: number): Promise<void> {
-    // If key already exists, remove old entry's size
     const existing = this.cache.get(key);
     if (existing) {
       this.currentBytes -= existing.entry.data.length;
       this.cache.delete(key);
     }
 
-    // Evict until we have room
     while (
       (this.cache.size >= this.maxEntries ||
         this.currentBytes + entry.data.length > this.maxTotalBytes) &&

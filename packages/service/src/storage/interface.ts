@@ -1,10 +1,8 @@
-// =============================================================================
 // Storage Interface — Strategy Pattern
-// =============================================================================
+
 // All persistent storage backends implement this interface.
 // This enables swapping between filesystem, S3, R2, MinIO, Backblaze B2
 // without changing any business logic.
-// =============================================================================
 
 import type { ImageMetadata } from '../types/index.js';
 

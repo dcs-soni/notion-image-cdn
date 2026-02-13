@@ -1,13 +1,11 @@
-// =============================================================================
 // Upstream Fetcher — Security Layers 3, 4, 5, 6, 7
-// =============================================================================
+
 // Fetches images from Notion's S3 with multiple security layers:
 //   Layer 3: Content-Type validation (only image/* MIME types)
 //   Layer 4: Response size limit (configurable, default 25MB)
 //   Layer 5: Upstream timeout via AbortController (default 15s)
 //   Layer 6: Chunked read with size enforcement (prevent Content-Length lies)
 //   Layer 7: No header forwarding (only minimal headers sent upstream)
-// =============================================================================
 
 export interface FetchResult {
   data: Buffer;
@@ -58,12 +56,11 @@ export async function fetchUpstreamImage(
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       const response = await fetch(currentUrl, {
         method: 'GET',
-        headers: UPSTREAM_HEADERS, // Layer 7: minimal headers, no forwarding
+        headers: UPSTREAM_HEADERS,
         signal: controller.signal,
-        redirect: 'manual', // Handle redirects ourselves for SSRF safety
+        redirect: 'manual',
       });
 
-      // ---- Handle redirects manually ----
       if (isRedirect(response.status)) {
         const location = response.headers.get('location');
         if (!location) {
@@ -75,7 +72,6 @@ export async function fetchUpstreamImage(
           };
         }
 
-        // Resolve relative redirects against current URL
         let redirectUrl: URL;
         try {
           redirectUrl = new URL(location, currentUrl);
@@ -106,7 +102,7 @@ export async function fetchUpstreamImage(
         continue;
       }
 
-      // ---- Too many redirects ----
+      // Too many redirects
       // (This is a guard — we'll only reach here if the loop exhausts)
       // Actually, if we're here the response is NOT a redirect, so process it.
 
@@ -119,7 +115,7 @@ export async function fetchUpstreamImage(
         };
       }
 
-      // Layer 3: Content-Type validation — only allow image/* MIME types
+      // Content-Type validation — only allow image/* MIME types
       const contentType = response.headers.get('content-type') ?? '';
       if (!contentType.startsWith('image/')) {
         return {
@@ -130,11 +126,10 @@ export async function fetchUpstreamImage(
         };
       }
 
-      // Layer 4 + 6: Read body in chunks with size enforcement
+      // Read body in chunks with size enforcement
       // Don't trust Content-Length header (could lie), count actual bytes
       const declaredSize = parseInt(response.headers.get('content-length') ?? '0', 10);
 
-      // Quick reject if declared size exceeds limit (but still verify during streaming)
       if (declaredSize > options.maxSizeBytes) {
         return {
           error: true,
@@ -153,7 +148,7 @@ export async function fetchUpstreamImage(
         };
       }
 
-      // Layer 6: Chunked read with running byte count
+      // Chunked read with running byte count
       const chunks: Uint8Array[] = [];
       let totalBytes = 0;
       const reader = response.body.getReader();
@@ -164,7 +159,7 @@ export async function fetchUpstreamImage(
 
         totalBytes += value.byteLength;
 
-        // Layer 4: Enforce size limit during streaming (catch Content-Length lies)
+        //  Enforce size limit during streaming (catch Content-Length lies)
         if (totalBytes > options.maxSizeBytes) {
           reader.cancel();
           return {
@@ -187,7 +182,6 @@ export async function fetchUpstreamImage(
         };
       }
 
-      // Assemble chunks into a single Buffer
       const data = Buffer.concat(chunks);
 
       return {
@@ -205,7 +199,7 @@ export async function fetchUpstreamImage(
       message: `Upstream exceeded maximum of ${MAX_REDIRECTS} redirects`,
     };
   } catch (err: unknown) {
-    // Layer 5: Handle timeout
+    // Handle timeout
     if (err instanceof DOMException && err.name === 'AbortError') {
       return {
         error: true,
@@ -215,7 +209,6 @@ export async function fetchUpstreamImage(
       };
     }
 
-    // Network errors
     const message = err instanceof Error ? err.message : 'Unknown fetch error';
     return {
       error: true,
@@ -228,22 +221,16 @@ export async function fetchUpstreamImage(
   }
 }
 
-/** Check if an HTTP status code is a redirect */
 function isRedirect(status: number): boolean {
   return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
 }
 
-/**
- * Normalize Content-Type to a clean MIME type without parameters.
- * e.g., "image/jpeg; charset=utf-8" → "image/jpeg"
- */
 function normalizeContentType(raw: string): string {
   const semicolonIndex = raw.indexOf(';');
   const mimeType = semicolonIndex >= 0 ? raw.slice(0, semicolonIndex) : raw;
   return mimeType.trim().toLowerCase();
 }
 
-/** Type guard to check if a FetchOutcome is an error */
 export function isFetchError(result: FetchOutcome): result is FetchError {
   return 'error' in result && result.error === true;
 }

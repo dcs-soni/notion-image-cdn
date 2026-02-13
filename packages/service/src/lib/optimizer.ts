@@ -1,6 +1,5 @@
-// =============================================================================
 // Image Optimizer — Sharp Pipeline
-// =============================================================================
+
 // On-the-fly image transformation using Sharp:
 //   - Resize (width, height, fit mode)
 //   - Format conversion (WebP, AVIF, PNG, JPEG)
@@ -9,7 +8,6 @@
 //
 // Sharp runs natively on Node.js — no Wasm limitations.
 // The pipeline is designed to be stateless: input Buffer → output Buffer.
-// =============================================================================
 
 import sharp from 'sharp';
 import type { TransformOptions } from '../types/index.js';
@@ -29,7 +27,6 @@ export async function optimizeImage(
   input: Buffer,
   options?: TransformOptions,
 ): Promise<OptimizeResult> {
-  // If no transforms requested, return original
   if (!options || isEmptyTransform(options)) {
     // Still probe dimensions for metadata
     const metadata = await sharp(input).metadata();
@@ -48,7 +45,6 @@ export async function optimizeImage(
     limitInputPixels: 268402689, // ~16384x16384 pixels
   });
 
-  // Apply resize if width or height specified
   if (options.width || options.height) {
     pipeline = pipeline.resize({
       width: options.width,
@@ -58,7 +54,6 @@ export async function optimizeImage(
     });
   }
 
-  // Apply format conversion
   const quality = options.quality ?? 80;
   const format = options.format ?? 'original';
 
@@ -81,7 +76,7 @@ export async function optimizeImage(
       break;
   }
 
-  // Strip metadata (EXIF, IPTC, XMP) — reduces size and prevents data leakage
+  // Strip EXIF/IPTC/XMP metadata to reduce size and prevent data leakage
   pipeline = pipeline.rotate(); // Auto-orient based on EXIF before stripping
   pipeline = pipeline.withMetadata({ orientation: undefined }); // Keep color profile, strip EXIF
 
@@ -103,7 +98,6 @@ export function negotiateFormat(
   acceptHeader: string | undefined,
   requestedFormat?: TransformOptions['format'],
 ): TransformOptions['format'] {
-  // Explicit format request takes priority
   if (requestedFormat && requestedFormat !== 'original') {
     return requestedFormat;
   }
@@ -137,7 +131,6 @@ export function parseTransformOptions(query: Record<string, unknown>): Transform
     }
   }
 
-  // Format
   if (query['fmt'] !== undefined) {
     const fmt = String(query['fmt']).toLowerCase();
     if (['webp', 'avif', 'png', 'jpeg'].includes(fmt)) {
@@ -145,7 +138,6 @@ export function parseTransformOptions(query: Record<string, unknown>): Transform
     }
   }
 
-  // Quality: 1–100
   if (query['q'] !== undefined) {
     const q = parseInt(String(query['q']), 10);
     if (!isNaN(q) && q >= 1 && q <= 100) {
@@ -153,7 +145,6 @@ export function parseTransformOptions(query: Record<string, unknown>): Transform
     }
   }
 
-  // Fit mode
   if (query['fit'] !== undefined) {
     const fit = String(query['fit']).toLowerCase();
     if (['cover', 'contain', 'fill', 'inside', 'outside'].includes(fit)) {
@@ -164,7 +155,6 @@ export function parseTransformOptions(query: Record<string, unknown>): Transform
   return options;
 }
 
-/** Check if transform options are effectively empty (no transforms to apply) */
 function isEmptyTransform(options: TransformOptions): boolean {
   return (
     options.width === undefined &&
@@ -175,7 +165,6 @@ function isEmptyTransform(options: TransformOptions): boolean {
   );
 }
 
-/** Map Sharp format strings to MIME content types */
 function formatToContentType(format: string): string {
   const map: Record<string, string> = {
     webp: 'image/webp',

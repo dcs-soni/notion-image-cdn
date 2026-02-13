@@ -6,43 +6,39 @@
 //
 // Gracefully degrades: if Redis is unavailable, methods return null/void
 // instead of throwing (the system falls through to L3 persistent storage).
-// =============================================================================
 
-import Redis from "ioredis";
-import type { EdgeCache, CacheEntry } from "./memory.js";
+import Redis from 'ioredis';
+import type { EdgeCache, CacheEntry } from './memory.js';
 
 export class RedisCache implements EdgeCache {
   private readonly client: Redis;
   private readonly keyPrefix: string;
   private connected = false;
 
-  constructor(redisUrl: string, keyPrefix = "nicdn:") {
+  constructor(redisUrl: string, keyPrefix = 'nicdn:') {
     this.keyPrefix = keyPrefix;
     this.client = new Redis(redisUrl, {
       maxRetriesPerRequest: 2,
-      retryStrategy: (times) => {
-        // Exponential backoff with max 30s
-        return Math.min(times * 1000, 30000);
-      },
+      retryStrategy: (times) => Math.min(times * 1000, 30000),
       enableReadyCheck: true,
       lazyConnect: true,
     });
 
-    this.client.on("connect", () => {
+    this.client.on('connect', () => {
       this.connected = true;
     });
 
-    this.client.on("error", () => {
+    this.client.on('error', () => {
       this.connected = false;
     });
 
-    this.client.on("close", () => {
+    this.client.on('close', () => {
       this.connected = false;
     });
   }
 
   name(): string {
-    return "redis";
+    return 'redis';
   }
 
   async healthCheck(): Promise<boolean> {
@@ -51,7 +47,7 @@ export class RedisCache implements EdgeCache {
         await this.client.connect();
       }
       const pong = await this.client.ping();
-      return pong === "PONG";
+      return pong === 'PONG';
     } catch {
       return false;
     }
@@ -86,30 +82,22 @@ export class RedisCache implements EdgeCache {
   async delete(key: string): Promise<void> {
     try {
       await this.client.del(this.resolveKey(key));
-    } catch {
-      // Graceful degradation
-    }
+    } catch {}
   }
 
   async deleteByPrefix(prefix: string): Promise<void> {
     try {
       const pattern = `${this.keyPrefix}${prefix}*`;
-      let cursor = "0";
+      let cursor = '0';
 
       do {
-        const [nextCursor, keys] = await this.client.scan(
-          cursor,
-          "MATCH",
-          pattern,
-          "COUNT",
-          100,
-        );
+        const [nextCursor, keys] = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
         cursor = nextCursor;
 
         if (keys.length > 0) {
           await this.client.del(...keys);
         }
-      } while (cursor !== "0");
+      } while (cursor !== '0');
     } catch {
       // Graceful degradation
     }
@@ -124,10 +112,6 @@ export class RedisCache implements EdgeCache {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Private helpers
-  // ---------------------------------------------------------------------------
-
   private resolveKey(key: string): string {
     return `${this.keyPrefix}${key}`;
   }
@@ -138,7 +122,7 @@ export class RedisCache implements EdgeCache {
  * Format: [contentType-length: 4 bytes][contentType: N bytes][image data: rest]
  */
 function serializeEntry(entry: CacheEntry): Buffer {
-  const contentTypeBytes = Buffer.from(entry.contentType, "utf-8");
+  const contentTypeBytes = Buffer.from(entry.contentType, 'utf-8');
   const lengthBuffer = Buffer.alloc(4);
   lengthBuffer.writeUInt32BE(contentTypeBytes.length, 0);
 
@@ -154,7 +138,7 @@ function deserializeEntry(raw: Buffer): CacheEntry | null {
   const contentTypeLength = raw.readUInt32BE(0);
   if (raw.length < 4 + contentTypeLength) return null;
 
-  const contentType = raw.subarray(4, 4 + contentTypeLength).toString("utf-8");
+  const contentType = raw.subarray(4, 4 + contentTypeLength).toString('utf-8');
   const data = raw.subarray(4 + contentTypeLength);
 
   return {

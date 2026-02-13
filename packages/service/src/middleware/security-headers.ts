@@ -1,10 +1,3 @@
-// =============================================================================
-// Security Headers Middleware
-// =============================================================================
-// Applies hardened response headers to every response. Defense-in-depth
-// against XSS, clickjacking, MIME sniffing, and other common web attacks.
-// =============================================================================
-
 import type { FastifyPluginCallback } from 'fastify';
 import fp from 'fastify-plugin';
 

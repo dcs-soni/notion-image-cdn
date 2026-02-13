@@ -1,7 +1,3 @@
-// =============================================================================
-// SDK Types
-// =============================================================================
-
 /** Options for constructing an optimized CDN URL */
 export interface OptimizeUrlOptions {
   /** Base URL of the CDN service (e.g., "https://notion-cdn.example.com") */

@@ -37,7 +37,6 @@ const NOTION_S3_HOSTS = new Set([
  * ```
  */
 export function getOptimizedUrl(originalUrl: string, options: OptimizeUrlOptions): string {
-  // Parse the URL safely
   let parsed: URL;
   try {
     parsed = new URL(originalUrl);
@@ -48,22 +47,18 @@ export function getOptimizedUrl(originalUrl: string, options: OptimizeUrlOptions
 
   const hostname = parsed.hostname.toLowerCase();
 
-  // Only rewrite known Notion S3 URLs
   if (!NOTION_S3_HOSTS.has(hostname)) {
     return originalUrl;
   }
 
-  // Extract path components
   const pathParts = extractPathComponents(hostname, parsed.pathname);
   if (!pathParts) return originalUrl;
 
   const { workspaceId, blockId, filename } = pathParts;
 
-  // Build the CDN URL
   const cdnBase = options.cdnBaseUrl.replace(/\/+$/, ''); // Remove trailing slashes
   const cdnPath = `/img/${encodeURIComponent(workspaceId)}/${encodeURIComponent(blockId)}/${encodeURIComponent(filename)}`;
 
-  // Build query params for transforms
   const params = new URLSearchParams();
   if (options.width) params.set('w', String(options.width));
   if (options.height) params.set('h', String(options.height));
@@ -75,9 +70,6 @@ export function getOptimizedUrl(originalUrl: string, options: OptimizeUrlOptions
   return queryString ? `${cdnBase}${cdnPath}?${queryString}` : `${cdnBase}${cdnPath}`;
 }
 
-/**
- * Check if a URL is a Notion S3 image URL.
- */
 export function isNotionImageUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -86,10 +78,6 @@ export function isNotionImageUrl(url: string): boolean {
     return false;
   }
 }
-
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
 
 interface PathComponents {
   workspaceId: string;
