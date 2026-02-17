@@ -1,0 +1,41 @@
+# Env vars with sync: false are NOT managed by this file — set them manually in the Render dashboard with your actual secrets.
+
+services:
+  - type: web
+    name: notion-image-cdn
+    runtime: docker
+    dockerfilePath: packages/service/Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '3002'
+      - key: HOST
+        value: '0.0.0.0'
+      - key: LOG_LEVEL
+        value: info
+      - key: STORAGE_BACKEND
+        value: r2
+      - key: RATE_LIMIT_PER_MINUTE
+        value: '100'
+
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ALLOWED_DOMAINS
+        value: 'prod-files-secure.s3.us-west-2.amazonaws.com,s3.us-west-2.amazonaws.com,file.notion.so,img.notionusercontent.com,images.unsplash.com'

@@ -34,8 +34,6 @@ RUN mkdir -p /data/cache && chown appuser:appgroup /data/cache
 ENV NODE_ENV=production
 ENV PORT=3002
 ENV HOST=0.0.0.0
-ENV STORAGE_BACKEND=fs
-ENV CACHE_DIR=/data/cache
 
 USER appuser
 
