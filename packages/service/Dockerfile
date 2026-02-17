@@ -27,7 +27,6 @@ WORKDIR /app
 
 COPY --from=builder /app/packages/service/dist ./dist
 COPY --from=builder /app/packages/service/package.json ./
-COPY --from=builder /app/bun.lock ./
 RUN bun install --production
 
 RUN mkdir -p /data/cache && chown appuser:appgroup /data/cache
