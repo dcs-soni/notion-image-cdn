@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Github, Menu, X } from 'lucide-react';
+import { MagneticButton } from './special/MagneticButton';
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -61,12 +62,14 @@ export function Navbar() {
             >
               <Github size={18} />
             </a>
-            <a
-              href="#quickstart"
-              className="font-mono text-xs tracking-wider px-4 py-2 bg-cobalt text-white hover:bg-cobalt-muted transition-colors duration-300"
-            >
-              Get Started
-            </a>
+            <MagneticButton strength={0.3} radius={100}>
+              <a
+                href="#quickstart"
+                className="font-mono text-xs tracking-wider px-4 py-2 bg-cobalt text-white hover:bg-cobalt-muted transition-colors duration-300 inline-block"
+              >
+                Get Started
+              </a>
+            </MagneticButton>
           </div>
 
           {/* Mobile menu button */}

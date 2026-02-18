@@ -1,5 +1,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { ParallaxText } from './special/ParallaxText';
+import { GlintCard } from './special/GlintCard';
 
 const tiers = [
   {
@@ -49,8 +51,9 @@ export function Architecture() {
   const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="architecture" ref={ref} className="w-full py-24 lg:py-32">
-      <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
+    <section id="architecture" ref={ref} className="w-full py-24 lg:py-32 relative">
+      <ParallaxText text="CACHE" speed={-0.12} />
+      <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 relative">
         {/* Section header — two-column */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16 lg:mb-20">
           <div className="lg:col-span-4">
@@ -93,65 +96,69 @@ export function Architecture() {
               transition={{ duration: 0.5, delay: 0.3 + i * 0.12 }}
               className="bg-background p-8 group"
             >
-              {/* Tier header */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`w-2 h-2 shrink-0 ${tier.color}`} />
-                <span className="font-mono text-xs tracking-wider text-muted-foreground">
-                  {tier.name}
-                </span>
-                <span className="font-sans text-sm text-foreground font-medium">{tier.label}</span>
-              </div>
-
-              {/* Progress bar */}
-              <div className="h-px bg-white/[0.06] mb-6 overflow-hidden">
-                <motion.div
-                  className={`h-full ${tier.color} opacity-60`}
-                  initial={{ width: 0 }}
-                  animate={
-                    isInView
-                      ? {
-                          width: tier.bar
-                            .replace('w-', '')
-                            .replace('full', '100%')
-                            .replace('2/3', '66%')
-                            .replace('1/3', '33%'),
-                        }
-                      : { width: 0 }
-                  }
-                  transition={{ duration: 0.8, delay: 0.5 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ width: isInView ? (i === 0 ? '33%' : i === 1 ? '66%' : '100%') : 0 }}
-                />
-              </div>
-
-              {/* Details */}
-              <div className="space-y-4">
-                <div>
-                  <div className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground/60 mb-1">
-                    Mechanism
-                  </div>
-                  <div className="font-sans text-sm text-foreground/80">{tier.mechanism}</div>
+              <GlintCard>
+                {/* Tier header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className={`w-2 h-2 shrink-0 ${tier.color}`} />
+                  <span className="font-mono text-xs tracking-wider text-muted-foreground">
+                    {tier.name}
+                  </span>
+                  <span className="font-sans text-sm text-foreground font-medium">
+                    {tier.label}
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                {/* Progress bar */}
+                <div className="h-px bg-white/[0.06] mb-6 overflow-hidden">
+                  <motion.div
+                    className={`h-full ${tier.color} opacity-60`}
+                    initial={{ width: 0 }}
+                    animate={
+                      isInView
+                        ? {
+                            width: tier.bar
+                              .replace('w-', '')
+                              .replace('full', '100%')
+                              .replace('2/3', '66%')
+                              .replace('1/3', '33%'),
+                          }
+                        : { width: 0 }
+                    }
+                    transition={{ duration: 0.8, delay: 0.5 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ width: isInView ? (i === 0 ? '33%' : i === 1 ? '66%' : '100%') : 0 }}
+                  />
+                </div>
+
+                {/* Details */}
+                <div className="space-y-4">
                   <div>
                     <div className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground/60 mb-1">
-                      TTL
+                      Mechanism
                     </div>
-                    <div className="font-mono text-xl text-foreground">{tier.ttl}</div>
+                    <div className="font-sans text-sm text-foreground/80">{tier.mechanism}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground/60 mb-1">
+                        TTL
+                      </div>
+                      <div className="font-mono text-xl text-foreground">{tier.ttl}</div>
+                    </div>
+                    <div>
+                      <div className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground/60 mb-1">
+                        Latency
+                      </div>
+                      <div className="font-mono text-xl text-foreground">{tier.latency}</div>
+                    </div>
                   </div>
                   <div>
                     <div className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground/60 mb-1">
-                      Latency
+                      Scope
                     </div>
-                    <div className="font-mono text-xl text-foreground">{tier.latency}</div>
+                    <div className="font-sans text-sm text-foreground/80">{tier.scope}</div>
                   </div>
                 </div>
-                <div>
-                  <div className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground/60 mb-1">
-                    Scope
-                  </div>
-                  <div className="font-sans text-sm text-foreground/80">{tier.scope}</div>
-                </div>
-              </div>
+              </GlintCard>
             </motion.div>
           ))}
         </div>

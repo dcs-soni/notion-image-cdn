@@ -254,4 +254,61 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(249, 249, 249, 0.1);
   }
+
+  /* ─── Glint Shimmer Card ─── */
+  .glint-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glint-border {
+    --glint-color: rgba(37, 99, 235, 0.3);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .glint-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: conic-gradient(
+      from var(--glint-angle, 0deg),
+      transparent 0%,
+      var(--glint-color) 5%,
+      transparent 15%,
+      transparent 100%
+    );
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    padding: 1px;
+    animation: glint-sweep 4s linear infinite;
+  }
+
+  @keyframes glint-sweep {
+    0% {
+      --glint-angle: 0deg;
+    }
+    100% {
+      --glint-angle: 360deg;
+    }
+  }
+
+  @property --glint-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  /* ─── Custom Cursor ─── */
+  .custom-cursor-active {
+    cursor: none;
+  }
+  .custom-cursor-active a,
+  .custom-cursor-active button {
+    cursor: none;
+  }
 }

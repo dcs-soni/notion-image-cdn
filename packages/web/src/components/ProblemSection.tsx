@@ -1,6 +1,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { ImageOff, Clock, AlertTriangle } from 'lucide-react';
+import { ParallaxText } from './special/ParallaxText';
 
 const problems = [
   {
@@ -25,8 +26,9 @@ export function ProblemSection() {
   const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section ref={ref} className="w-full py-24 lg:py-32">
-      <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
+    <section ref={ref} className="w-full py-24 lg:py-32 relative">
+      <ParallaxText text="BROKEN" speed={-0.1} />
+      <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 relative">
         {/* Two-column layout: heading left, cards right */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           {/* Left — sticky heading column */}

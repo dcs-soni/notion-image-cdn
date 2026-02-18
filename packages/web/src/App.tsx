@@ -7,10 +7,12 @@ import { Features } from './components/Features';
 import { CodeShowcase } from './components/CodeShowcase';
 import { QuickStart } from './components/QuickStart';
 import { Footer } from './components/Footer';
+import { CustomCursor } from './components/special/CustomCursor';
 
 function App() {
   return (
-    <div className="relative isolate min-h-screen bg-background text-foreground">
+    <div className="relative isolate min-h-screen bg-background text-foreground custom-cursor-active">
+      <CustomCursor />
       <Navbar />
       <main className="relative z-(--z-base)">
         <div className="max-w-[1440px] mx-auto">
