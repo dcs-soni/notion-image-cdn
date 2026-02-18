@@ -1,0 +1,257 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Design System ─── */
+
+@theme inline {
+  /* Radius: 0 for architectural sharp edges */
+  --radius: 0rem;
+  --radius-sm: 0rem;
+  --radius-md: 0rem;
+  --radius-lg: 0rem;
+  --radius-xl: 0rem;
+  --radius-2xl: 0rem;
+  --radius-3xl: 0rem;
+  --radius-4xl: 0rem;
+
+  /* Typography */
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Shadcn color tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Custom design tokens */
+  --color-cobalt: #2563eb;
+  --color-cobalt-muted: #1d4ed8;
+  --color-obsidian: #050505;
+  --color-chalk: #f9f9f9;
+  --color-surface: #0a0a0a;
+
+  /* Z-index layers — explicit stacking governance */
+  --z-base: 0;
+  --z-grain: 10;
+  --z-nav: 50;
+  --z-overlay: 100;
+}
+
+/*
+ * :root (light) MUST come first. .dark AFTER — so it wins at equal specificity.
+ */
+
+:root {
+  --radius: 0rem;
+  --background: #f9f9f9;
+  --foreground: #050505;
+  --card: #ffffff;
+  --card-foreground: #050505;
+  --popover: #ffffff;
+  --popover-foreground: #050505;
+  --primary: #050505;
+  --primary-foreground: #f9f9f9;
+  --secondary: #f0f0f0;
+  --secondary-foreground: #050505;
+  --muted: #f0f0f0;
+  --muted-foreground: #737373;
+  --accent: #2563eb;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: rgba(5, 5, 5, 0.08);
+  --input: rgba(5, 5, 5, 0.08);
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+  --sidebar: #f5f5f5;
+  --sidebar-foreground: #050505;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0f0f0;
+  --sidebar-accent-foreground: #050505;
+  --sidebar-border: rgba(5, 5, 5, 0.08);
+  --sidebar-ring: #2563eb;
+  --micro-border: rgba(5, 5, 5, 0.08);
+  --micro-border-strong: rgba(5, 5, 5, 0.15);
+}
+
+.dark {
+  --background: #050505;
+  --foreground: #f9f9f9;
+  --card: #0a0a0a;
+  --card-foreground: #f9f9f9;
+  --popover: #0a0a0a;
+  --popover-foreground: #f9f9f9;
+  --primary: #f9f9f9;
+  --primary-foreground: #050505;
+  --secondary: #111111;
+  --secondary-foreground: #f9f9f9;
+  --muted: #111111;
+  --muted-foreground: #737373;
+  --accent: #2563eb;
+  --accent-foreground: #f9f9f9;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(249, 249, 249, 0.08);
+  --input: rgba(249, 249, 249, 0.08);
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #f9f9f9;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #f9f9f9;
+  --sidebar-accent: #111111;
+  --sidebar-accent-foreground: #f9f9f9;
+  --sidebar-border: rgba(249, 249, 249, 0.08);
+  --sidebar-ring: #2563eb;
+  --micro-border: rgba(249, 249, 249, 0.08);
+  --micro-border-strong: rgba(249, 249, 249, 0.15);
+}
+
+/* ─── Base Layer ─── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  /*
+   * Grain overlay — z-index 10, NOT 9999.
+   * Must sit behind the nav (z-50) and behind any interactive elements.
+   * pointer-events: none ensures it never blocks clicks.
+   */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.02;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  ::selection {
+    background-color: #2563eb;
+    color: #f9f9f9;
+  }
+}
+
+/* ─── Utility Classes ─── */
+@layer utilities {
+  /* Consistent section container — enforces max-w + horizontal padding */
+  .section-container {
+    max-width: 80rem; /* 1280px */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem; /* px-6 */
+    padding-right: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    .section-container {
+      padding-left: 2rem; /* lg:px-8 */
+      padding-right: 2rem;
+    }
+  }
+
+  /* Consistent section vertical rhythm */
+  .section-padding {
+    padding-top: 6rem; /* py-24 */
+    padding-bottom: 6rem;
+  }
+  @media (min-width: 1024px) {
+    .section-padding {
+      padding-top: 7rem; /* lg:py-28 */
+      padding-bottom: 7rem;
+    }
+  }
+
+  /* Micro-border utilities */
+  .micro-border-b {
+    border-bottom: 0.5px solid var(--micro-border);
+  }
+  .micro-border-t {
+    border-top: 0.5px solid var(--micro-border);
+  }
+  .micro-border-r {
+    border-right: 0.5px solid var(--micro-border);
+  }
+  .micro-border {
+    border: 0.5px solid var(--micro-border);
+  }
+  .micro-border-strong {
+    border: 0.5px solid var(--micro-border-strong);
+  }
+  .micro-border-t-0 {
+    border-top: none;
+  }
+
+  /* Text mask for staggered reveal */
+  .text-mask {
+    overflow: hidden;
+    display: block;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #f9f9f9 0%, #737373 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(249, 249, 249, 0.1);
+  }
+}
