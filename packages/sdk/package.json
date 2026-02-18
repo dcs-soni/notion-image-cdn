@@ -1,6 +1,6 @@
 {
   "name": "notion-image-cdn",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Rewrite Notion's expiring S3 image URLs to permanent, optimized CDN URLs",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
