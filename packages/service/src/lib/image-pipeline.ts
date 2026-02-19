@@ -32,7 +32,7 @@ export async function runImagePipeline(
   storage: StorageBackend,
   edgeCache: EdgeCache | null,
   options: PipelineOptions = {},
-): Promise<ReturnType<FastifyReply['send']>> {
+): Promise<void> {
   const cacheTtl = config.CACHE_TTL_SECONDS;
 
   const query = request.query as Record<string, unknown>;
@@ -51,14 +51,8 @@ export async function runImagePipeline(
     const l2Hit = await edgeCache.get(cacheKey);
     if (l2Hit) {
       cacheTier = 'L2_EDGE';
-      return sendImageResponse(
-        reply,
-        l2Hit.data,
-        l2Hit.contentType,
-        cacheTier,
-        undefined,
-        cacheTtl,
-      );
+      sendImageResponse(reply, l2Hit.data, l2Hit.contentType, cacheTier, undefined, cacheTtl);
+      return;
     }
   }
 
@@ -82,7 +76,7 @@ export async function runImagePipeline(
         .catch(() => {});
     }
 
-    return sendImageResponse(
+    sendImageResponse(
       reply,
       l3Hit.data,
       l3Hit.metadata.contentType,
@@ -90,6 +84,7 @@ export async function runImagePipeline(
       undefined,
       cacheTtl,
     );
+    return;
   }
 
   // Cache MISS — fetch from upstream
@@ -113,7 +108,7 @@ export async function runImagePipeline(
       options.upstreamErrorMode === 'cache-miss' &&
       (fetchResult.status === 403 || fetchResult.status === 404 || fetchResult.status === 502)
     ) {
-      return reply.status(404).send({
+      reply.status(404).send({
         error: {
           status: 404,
           code: 'IMAGE_NOT_CACHED',
@@ -122,9 +117,10 @@ export async function runImagePipeline(
           requestId: request.requestId,
         },
       });
+      return;
     }
 
-    return reply.status(fetchResult.status).send({
+    reply.status(fetchResult.status).send({
       error: {
         status: fetchResult.status,
         code: fetchResult.code,
@@ -132,6 +128,7 @@ export async function runImagePipeline(
         requestId: request.requestId,
       },
     });
+    return;
   }
 
   // Optimize
@@ -184,7 +181,7 @@ export async function runImagePipeline(
       .catch(() => {});
   }
 
-  return sendImageResponse(
+  sendImageResponse(
     reply,
     outputData,
     outputContentType,
