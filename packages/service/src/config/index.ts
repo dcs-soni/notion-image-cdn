@@ -14,7 +14,6 @@ const ConfigSchema = z.object({
   S3_ACCESS_KEY: z.string().optional(),
   S3_SECRET_KEY: z.string().optional(),
 
-  // Edge Cache (L2)
   REDIS_URL: z.string().optional(),
 
   ALLOWED_DOMAINS: z
@@ -29,7 +28,9 @@ const ConfigSchema = z.object({
     .default(25 * 1024 * 1024), // 25MB
   UPSTREAM_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15_000),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(100),
+  CACHE_TTL_SECONDS: z.coerce.number().int().min(60).default(86400),
 
+  API_KEYS: z.string().optional(),
   API_KEYS_ENABLED: z
     .string()
     .transform((v) => v === 'true')
@@ -45,12 +46,10 @@ export type Config = z.infer<typeof ConfigSchema>;
 export interface ResolvedConfig extends Config {
   allowedDomainsSet: Set<string>;
   corsOrigins: string[];
+  /** Pre-parsed Set of valid API keys for O(1) timing-safe comparison */
+  apiKeysSet: Set<string>;
 }
 
-/**
- * Load and validate configuration from environment variables.
- * Fails fast at startup if config is invalid.
- */
 export function loadConfig(): ResolvedConfig {
   const result = ConfigSchema.safeParse(process.env);
 
@@ -77,7 +76,6 @@ export function loadConfig(): ResolvedConfig {
         .filter(Boolean)
     : ['*'];
 
-  // Validate S3 config if S3/R2 backend is selected
   if (config.STORAGE_BACKEND === 's3' || config.STORAGE_BACKEND === 'r2') {
     if (!config.S3_BUCKET) {
       console.error('[ERROR] S3_BUCKET is required when STORAGE_BACKEND is s3 or r2');
@@ -91,9 +89,17 @@ export function loadConfig(): ResolvedConfig {
     }
   }
 
+  const apiKeysSet = new Set(
+    (config.API_KEYS ?? '')
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean),
+  );
+
   return Object.freeze({
     ...config,
     allowedDomainsSet,
     corsOrigins,
+    apiKeysSet,
   }) as ResolvedConfig;
 }
