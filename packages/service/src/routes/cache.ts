@@ -2,10 +2,6 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { generateCachePrefix } from '../lib/cache-key.js';
 
 export async function cacheRoutes(fastify: FastifyInstance) {
-  /**
-   * DELETE /api/v1/cache
-   * Purge cached images by URL or page_id.
-   */
   fastify.delete('/api/v1/cache', async (request: FastifyRequest, reply: FastifyReply) => {
     const query = request.query as Record<string, unknown>;
     const url = typeof query['url'] === 'string' ? query['url'] : null;
@@ -27,7 +23,6 @@ export async function cacheRoutes(fastify: FastifyInstance) {
 
     try {
       if (url) {
-        // Purge a specific image (all variants)
         const baseUrl = url.split('?')[0] ?? url;
         const prefix = generateCachePrefix(baseUrl);
 
@@ -46,14 +41,15 @@ export async function cacheRoutes(fastify: FastifyInstance) {
       }
 
       if (pageId) {
-        // Purge by page_id requires walking storage (slower)
-        // For now, log the request — full implementation in Phase 5
-        request.log.info({ pageId }, 'Cache purge by page_id requested');
-        return reply.status(200).send({
-          message: 'Cache purge by page_id is queued',
-          purgedBy: 'page_id',
-          target: pageId,
-          requestId: request.requestId,
+        request.log.info({ pageId }, 'Cache purge by page_id requested (not yet implemented)');
+        return reply.status(501).send({
+          error: {
+            status: 501,
+            code: 'NOT_IMPLEMENTED',
+            message:
+              'Cache purge by page_id is not yet implemented. Use ?url=<encoded-url> to purge individual images.',
+            requestId: request.requestId,
+          },
         });
       }
     } catch (err: unknown) {
@@ -70,7 +66,6 @@ export async function cacheRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/api/v1/stats', async (_request: FastifyRequest, reply: FastifyReply) => {
-    // Basic stats — will be enhanced with actual metrics in Phase 4
     return reply.status(200).send({
       status: 'ok',
       message: 'Statistics endpoint. Detailed metrics available in Phase 4 (Dashboard).',

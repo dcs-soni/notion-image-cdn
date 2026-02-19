@@ -1,5 +1,9 @@
+import { createRequire } from 'node:module';
 import type { FastifyInstance } from 'fastify';
 import type { HealthResponse } from '../types/index.js';
+
+const require = createRequire(import.meta.url);
+const SERVICE_VERSION: string = (require('../../package.json') as { version: string }).version;
 
 const startTime = Date.now();
 
@@ -18,7 +22,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
 
     const response: HealthResponse = {
       status,
-      version: '1.0.0',
+      version: SERVICE_VERSION,
       uptime: Math.floor((Date.now() - startTime) / 1000),
       timestamp: new Date().toISOString(),
       checks: {
