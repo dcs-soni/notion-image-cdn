@@ -4,8 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── Design System ─── */
-
 @theme inline {
   /* Radius: 0 for architectural sharp edges */
   --radius: 0rem;
@@ -22,7 +20,6 @@
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* Shadcn color tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -62,16 +59,11 @@
   --color-chalk: #f9f9f9;
   --color-surface: #0a0a0a;
 
-  /* Z-index layers — explicit stacking governance */
   --z-base: 0;
   --z-grain: 10;
   --z-nav: 50;
   --z-overlay: 100;
 }
-
-/*
- * :root (light) MUST come first. .dark AFTER — so it wins at equal specificity.
- */
 
 :root {
   --radius: 0rem;
@@ -146,7 +138,6 @@
   --micro-border-strong: rgba(249, 249, 249, 0.15);
 }
 
-/* ─── Base Layer ─── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -180,31 +171,30 @@
   }
 }
 
-/* ─── Utility Classes ─── */
 @layer utilities {
   /* Consistent section container — enforces max-w + horizontal padding */
   .section-container {
-    max-width: 80rem; /* 1280px */
+    max-width: 80rem;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1.5rem; /* px-6 */
+    padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
   @media (min-width: 1024px) {
     .section-container {
-      padding-left: 2rem; /* lg:px-8 */
+      padding-left: 2rem;
       padding-right: 2rem;
     }
   }
 
   /* Consistent section vertical rhythm */
   .section-padding {
-    padding-top: 6rem; /* py-24 */
+    padding-top: 6rem;
     padding-bottom: 6rem;
   }
   @media (min-width: 1024px) {
     .section-padding {
-      padding-top: 7rem; /* lg:py-28 */
+      padding-top: 7rem;
       padding-bottom: 7rem;
     }
   }
@@ -255,7 +245,6 @@
     background: rgba(249, 249, 249, 0.1);
   }
 
-  /* ─── Glint Shimmer Card ─── */
   .glint-card {
     position: relative;
     overflow: hidden;
@@ -303,7 +292,6 @@
     inherits: false;
   }
 
-  /* ─── Custom Cursor ─── */
   .custom-cursor-active {
     cursor: none;
   }
