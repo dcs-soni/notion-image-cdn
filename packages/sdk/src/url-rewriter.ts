@@ -8,11 +8,6 @@
 
 import type { OptimizeUrlOptions } from './types';
 
-/**
- * Known Notion image hostnames.
- * URLs from these hosts are rewritten to use the CDN.
- * All other URLs are returned unchanged.
- */
 const NOTION_S3_HOSTS = new Set([
   'prod-files-secure.s3.us-west-2.amazonaws.com',
   's3.us-west-2.amazonaws.com',
@@ -41,7 +36,6 @@ export function getOptimizedUrl(originalUrl: string, options: OptimizeUrlOptions
   try {
     parsed = new URL(originalUrl);
   } catch {
-    // If URL is invalid, return as-is (don't break rendering)
     return originalUrl;
   }
 

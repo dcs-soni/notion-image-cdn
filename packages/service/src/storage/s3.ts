@@ -191,7 +191,6 @@ function serializeMetadata(meta: ImageMetadata): Record<string, string> {
   };
 }
 
-/** Deserialize S3 custom metadata back into ImageMetadata */
 function deserializeMetadata(raw: Record<string, string>): ImageMetadata {
   return {
     originalUrl: raw['x-original-url'] ?? '',

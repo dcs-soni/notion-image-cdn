@@ -1,19 +1,16 @@
-// Filesystem Storage Backend
-
-// Local filesystem storage for self-hosted deployments and development.
-// Images are stored as files, metadata as sidecar JSON files.
-//
-// Directory structure:
-//   <CACHE_DIR>/<first 2 chars of key>/<key>.bin    — image data
-//   <CACHE_DIR>/<first 2 chars of key>/<key>.json   — metadata
-//
-// The first 2 chars of the hash are used as a directory prefix to avoid
-// having millions of files in a single directory (filesystem performance).
-
 import { mkdir, readFile, writeFile, unlink, readdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import type { ImageMetadata } from '../types/index.js';
 import type { StorageBackend, StorageGetResult } from './interface.js';
+
+//Local filesystem storage for self-hosted deployments and development.
+
+// Directory layout:
+//   <CACHE_DIR>/<first 2 chars of key>/<key>.bin   — image data
+//   <CACHE_DIR>/<first 2 chars of key>/<key>.json  — metadata
+//
+// The 2-char prefix shards files into subdirectories to avoid filesystem
+// performance degradation from millions of files in a single directory.
 
 export class FilesystemStorage implements StorageBackend {
   private readonly baseDir: string;
@@ -48,14 +45,10 @@ export class FilesystemStorage implements StorageBackend {
       metadata.lastAccessedAt = new Date().toISOString();
       metadata.accessCount = (metadata.accessCount ?? 0) + 1;
 
-      // Fire-and-forget metadata update
-      writeFile(metaPath, JSON.stringify(metadata, null, 2)).catch(() => {
-        // Silently ignore metadata update failures
-      });
+      writeFile(metaPath, JSON.stringify(metadata, null, 2)).catch(() => {});
 
       return { data, metadata };
     } catch (err: unknown) {
-      // File not found is expected (cache miss)
       if (isNodeError(err) && err.code === 'ENOENT') {
         return null;
       }
@@ -112,11 +105,9 @@ export class FilesystemStorage implements StorageBackend {
     }
   }
 
-  /**
-   * Sanitize cache key to prevent path traversal attacks.
-   * Only allow alphanumeric, hyphens, underscores, and forward slashes.
-   * Replace everything else with underscores.
-   */
+  // Sanitize cache key to prevent path traversal attacks.
+  // Only allows alphanumeric, hyphens, underscores, and forward slashes.
+
   private sanitizeKey(key: string): string {
     return key.replace(/[^a-zA-Z0-9\-_/]/g, '_');
   }

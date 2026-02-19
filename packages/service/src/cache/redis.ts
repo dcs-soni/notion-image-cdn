@@ -1,6 +1,5 @@
-// =============================================================================
 // Redis Edge Cache — L2 Cache Layer
-// =============================================================================
+
 // Redis-backed edge cache for production deployments. Provides shared cache
 // across multiple server instances with configurable TTL.
 //
@@ -60,10 +59,10 @@ export class RedisCache implements EdgeCache {
 
       if (!raw) return null;
 
-      // Format: <contentType-length(4 bytes)><contentType><data>
+      // Binary format: <contentType-length(4 bytes)><contentType><image data>
       return deserializeEntry(raw);
     } catch {
-      // Graceful degradation — Redis failure shouldn't break the service
+      // Graceful degradation — Redis failure falls through to L3 persistent storage
       return null;
     }
   }
@@ -103,7 +102,6 @@ export class RedisCache implements EdgeCache {
     }
   }
 
-  /** Disconnect from Redis cleanly (for graceful shutdown) */
   async disconnect(): Promise<void> {
     try {
       await this.client.quit();
@@ -129,9 +127,6 @@ function serializeEntry(entry: CacheEntry): Buffer {
   return Buffer.concat([lengthBuffer, contentTypeBytes, entry.data]);
 }
 
-/**
- * Deserialize a Redis buffer back into a CacheEntry.
- */
 function deserializeEntry(raw: Buffer): CacheEntry | null {
   if (raw.length < 4) return null;
 

@@ -1,9 +1,7 @@
-// =============================================================================
 // NotionImage React Component
-// =============================================================================
+
 // Drop-in replacement for <img> that automatically rewrites Notion S3 URLs
 // to permanent CDN URLs.
-// =============================================================================
 
 import React from 'react';
 import { getOptimizedUrl } from './url-rewriter';

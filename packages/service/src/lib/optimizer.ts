@@ -1,4 +1,4 @@
-// Image Optimizer — Sharp Pipeline
+// Image Optimizer-  Sharp Pipeline
 
 // On-the-fly image transformation using Sharp:
 //   - Resize (width, height, fit mode)
@@ -19,10 +19,6 @@ export interface OptimizeResult {
   height?: number;
 }
 
-/**
- * Optimize an image according to the provided transform options.
- * If no options are provided, returns the original image untouched.
- */
 export async function optimizeImage(
   input: Buffer,
   options?: TransformOptions,
@@ -39,10 +35,9 @@ export async function optimizeImage(
   }
 
   let pipeline = sharp(input, {
-    // Fail on invalid input rather than silently producing garbage
     failOn: 'error',
-    // Limit input size to prevent decompression bombs
-    limitInputPixels: 268402689, // ~16384x16384 pixels
+    // Limit input pixels to prevent decompression bombs (~16384x16384)
+    limitInputPixels: 268402689,
   });
 
   if (options.width || options.height) {
@@ -50,7 +45,7 @@ export async function optimizeImage(
       width: options.width,
       height: options.height,
       fit: options.fit ?? 'inside',
-      withoutEnlargement: true, // Never upscale — only downscale
+      withoutEnlargement: true,
     });
   }
 
@@ -72,13 +67,12 @@ export async function optimizeImage(
       break;
     case 'original':
     default:
-      // Keep original format, just apply quality if format is lossy
       break;
   }
 
-  // Strip EXIF/IPTC/XMP metadata to reduce size and prevent data leakage
-  pipeline = pipeline.rotate(); // Auto-orient based on EXIF before stripping
-  pipeline = pipeline.withMetadata({ orientation: undefined }); // Keep color profile, strip EXIF
+  // Auto-orient from EXIF before stripping metadata to prevent data leakage
+  pipeline = pipeline.rotate();
+  pipeline = pipeline.withMetadata({ orientation: undefined });
 
   const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
 
@@ -92,7 +86,7 @@ export async function optimizeImage(
 
 /**
  * Negotiate the best output format based on the Accept header.
- * Returns the most efficient format the client supports.
+ * Prefers AVIF > WebP > original (compression efficiency order).
  */
 export function negotiateFormat(
   acceptHeader: string | undefined,
@@ -104,18 +98,15 @@ export function negotiateFormat(
 
   if (!acceptHeader) return 'original';
 
-  // Prefer AVIF > WebP > original (in order of compression efficiency)
   if (acceptHeader.includes('image/avif')) return 'avif';
   if (acceptHeader.includes('image/webp')) return 'webp';
 
   return 'original';
 }
 
-/** Parse and validate transform options from query parameters */
 export function parseTransformOptions(query: Record<string, unknown>): TransformOptions {
   const options: TransformOptions = {};
 
-  // Width: 1–10000 pixels
   if (query['w'] !== undefined) {
     const w = parseInt(String(query['w']), 10);
     if (!isNaN(w) && w >= 1 && w <= 10000) {
@@ -123,7 +114,6 @@ export function parseTransformOptions(query: Record<string, unknown>): Transform
     }
   }
 
-  // Height: 1–10000 pixels
   if (query['h'] !== undefined) {
     const h = parseInt(String(query['h']), 10);
     if (!isNaN(h) && h >= 1 && h <= 10000) {

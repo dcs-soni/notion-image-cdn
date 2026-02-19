@@ -1,8 +1,3 @@
-// Application Entrypoint
-
-// Starts the HTTP server with graceful shutdown on SIGTERM/SIGINT.
-// This file should be minimal — all logic lives in server.ts and modules.
-
 import { createServer } from './server.js';
 
 async function main() {

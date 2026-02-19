@@ -46,21 +46,20 @@ export function parseNotionUrl(rawUrl: string): ParsedNotionUrl | null {
 function extractFromPathSegments(parsedUrl: URL, pathname: string): ParsedNotionUrl | null {
   const segments = pathname.split('/').filter(Boolean);
 
-  // workspaceId, blockId, filename
   if (segments.length < 3) {
     return null;
   }
 
   const workspaceId = decodeURIComponent(segments[0] ?? '');
   const blockId = decodeURIComponent(segments[1] ?? '');
-  // Filename might contain subdirectory paths, take the last segment
+  // Filename might contain subdirectory paths — take the last segment
   const filename = decodeURIComponent(segments[segments.length - 1] ?? '');
 
   if (!workspaceId || !blockId || !filename) {
     return null;
   }
 
-  // Base URL without query params (for cache key stability)
+  // Strip query params for cache key stability (S3 signatures change every request)
   const baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
 
   return {
@@ -89,7 +88,6 @@ function extractFromNotionusercontent(parsedUrl: URL): ParsedNotionUrl | null {
   const s3Key = decodeURIComponent(segments[1] ?? '');
   const keyParts = s3Key.split('/').filter(Boolean);
 
-  // Remove 'prod-files-secure' prefix if present
   if (keyParts[0] === 'prod-files-secure') {
     keyParts.shift();
   }
@@ -117,14 +115,10 @@ function extractFromNotionusercontent(parsedUrl: URL): ParsedNotionUrl | null {
   };
 }
 
-/**
- * Reconstruct a Notion S3 URL from its parsed components.
- * This is used when the clean URL endpoint needs to fetch the original image.
- *
- * NOTE: We cannot reconstruct the original pre-signed URL (the signature expires).
- * Instead, we use the Notion API to get a fresh signed URL, or fetch directly
- * from the stored base URL. The returned URL will NOT have valid S3 signing params.
- */
+// Reconstruct a Notion S3 path from its parsed components.
+// NOTE: Cannot reconstruct the original pre-signed URL — the S3 signature
+// expires. The returned path has no signing params and will 403 on direct
+// S3 access. Use only for building clean CDN paths.
 export function reconstructNotionPath(
   workspaceId: string,
   blockId: string,

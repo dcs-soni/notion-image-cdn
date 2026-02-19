@@ -18,7 +18,6 @@ export interface ValidationResult {
 }
 
 export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): ValidationResult {
-  // Check URL length before parsing (prevent ReDoS / memory attacks)
   if (!rawUrl || rawUrl.length === 0) {
     return { valid: false, error: 'URL is required', errorCode: 'MISSING_URL' };
   }
@@ -42,7 +41,6 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
     };
   }
 
-  // HTTPS-only (prevent downgrade attacks, MitM)
   if (parsed.protocol !== 'https:') {
     return {
       valid: false,
@@ -79,50 +77,44 @@ export function validateImageUrl(rawUrl: string, allowedDomains: Set<string>): V
   return { valid: true };
 }
 
-/**
- * Detect private/internal hostnames and IP addresses.
- * Prevents SSRF attacks targeting internal services.
- *
- * Uses numeric IPv4 parsing to catch bypass vectors like short-form IPs
- * (e.g., 127.1), and covers all RFC 1918 / RFC 5735 ranges.
- */
+// Detect private/internal hostnames and IP addresses to prevent SSRF.
+//
+// Uses numeric IPv4 parsing to catch bypass vectors like short-form IPs
+// (e.g., 127.1), and covers all RFC 1918 / RFC 5735 ranges.
+
 function isPrivateHost(hostname: string): boolean {
   if (hostname === 'localhost') return true;
 
-  // Internal TLDs
   if (hostname.endsWith('.local') || hostname.endsWith('.internal')) {
     return true;
   }
 
-  //  IPv6 checks
   // Strip brackets that URL parser may leave: [::1] → ::1
   const bareHost =
     hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
 
-  if (bareHost === '::1' || bareHost === '::') return true; // Loopback / unspecified
+  if (bareHost === '::1' || bareHost === '::') return true;
   if (bareHost.startsWith('fc') || bareHost.startsWith('fd')) return true; // Unique-local (fc00::/7)
   if (bareHost.toLowerCase().startsWith('fe80')) return true; // Link-local (fe80::/10)
+
   // IPv4-mapped IPv6: ::ffff:127.0.0.1
   if (bareHost.toLowerCase().startsWith('::ffff:')) {
-    const mapped = bareHost.slice(7); // extract the IPv4 part
+    const mapped = bareHost.slice(7);
     const ip = parseIPv4(mapped);
     if (ip !== null && isPrivateIPv4(ip)) return true;
   }
 
-  // IPv4 checks (numeric, covers short-form like 127.1)
   const ip = parseIPv4(hostname);
   if (ip !== null && isPrivateIPv4(ip)) return true;
 
   return false;
 }
 
-/**
- * Parse a dotted-decimal IPv4 string into a 32-bit unsigned integer.
- * Returns null if the string is not a valid IPv4 address.
- * Only accepts strict decimal octets (0-255) to avoid octal/hex tricks.
- */
+// Parse a dotted-decimal IPv4 string into a 32-bit unsigned integer.
+// Returns null if not a valid IPv4 address.
+// Only accepts strict decimal octets to avoid octal/hex bypass tricks (e.g., 0177.0.0.1).
+
 function parseIPv4(host: string): number | null {
-  // Must only contain digits and dots
   if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;
 
   const parts = host.split('.');
@@ -137,7 +129,6 @@ function parseIPv4(host: string): number | null {
     result = (result << 8) | octet;
   }
 
-  // Ensure unsigned 32-bit
   return result >>> 0;
 }
 
@@ -163,7 +154,7 @@ function isPrivateIPv4(ip: number): boolean {
   return (
     ip >>> 24 === 0 || // 0.0.0.0/8
     ip >>> 24 === 10 || // 10.0.0.0/8
-    ip >>> 22 === ((100 << 2) | 1) || // 100.64.0.0/10  (first 10 bits = 0b0110010001)
+    ip >>> 22 === ((100 << 2) | 1) || // 100.64.0.0/10
     ip >>> 24 === 127 || // 127.0.0.0/8
     ip >>> 16 === 0xa9fe || // 169.254.0.0/16
     ip >>> 20 === 0xac1 || // 172.16.0.0/12

@@ -1,6 +1,5 @@
-// =============================================================================
 // In-Memory LRU Cache — L2 Alternative
-// =============================================================================
+
 // Used when Redis is not configured. Provides a simple in-memory LRU cache
 // with configurable max size. Gracefully handles memory pressure by evicting
 // least-recently-used entries.
@@ -53,7 +52,7 @@ export class MemoryCache implements EdgeCache {
       return null;
     }
 
-    // Move to end (most recently used) — Map preserves insertion order
+    // Move to end to mark as most recently used (Map preserves insertion order)
     this.cache.delete(key);
     this.cache.set(key, entry);
 
@@ -83,7 +82,7 @@ export class MemoryCache implements EdgeCache {
       }
     }
 
-    // If single entry exceeds max, skip caching (don't OOM)
+    // Skip caching if a single entry exceeds the total limit (prevent OOM)
     if (entry.data.length > this.maxTotalBytes) {
       return;
     }
