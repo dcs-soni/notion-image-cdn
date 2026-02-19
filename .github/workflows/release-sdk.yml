@@ -99,6 +99,18 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Write version back to package.json and commit
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          npm pkg set version="$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/sdk/package.json
+          git diff --staged --quiet || git commit -m "chore(sdk): bump version to v${VERSION} [skip ci]"
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   github-release:
     name: Create GitHub Release
     needs: publish
