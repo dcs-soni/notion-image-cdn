@@ -1,15 +1,9 @@
-# =============================================================================
 # Release SDK — Publish to npm
-# =============================================================================
-# Triggered when you push a version tag like v1.0.0, v1.2.3, etc.
-#
+
+# Triggered when push a version tag like v1.0.0, v1.2.3, etc.
 # Usage:
 #   git tag v1.0.1
 #   git push origin v1.0.1
-#
-# Prerequisites:
-#   - NPM_TOKEN repository secret (Settings → Secrets → Actions)
-# =============================================================================
 
 name: Release SDK
 
@@ -27,7 +21,6 @@ permissions:
   id-token: write # For npm provenance (supply chain security)
 
 jobs:
-  # ── Gate: ensure CI passes before publishing ──────────────────────────
   ci:
     name: Lint → Build → Test
     runs-on: ubuntu-latest
@@ -62,7 +55,6 @@ jobs:
       - name: Test
         run: bun run test
 
-  # ── Publish to npm ────────────────────────────────────────────────────
   publish:
     name: Publish to npm
     needs: ci
@@ -107,7 +99,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  # ── Create GitHub Release ─────────────────────────────────────────────
   github-release:
     name: Create GitHub Release
     needs: publish

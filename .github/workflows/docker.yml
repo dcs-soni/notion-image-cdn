@@ -1,10 +1,8 @@
-# =============================================================================
 # Docker — Build Verification
-# =============================================================================
+
 # Verifies that the Docker image builds successfully.
 # Runs only when service code, Dockerfiles, or docker-compose change.
 # Does NOT push to any registry — this is a build check only.
-# =============================================================================
 
 name: Docker Build
 
@@ -41,16 +39,12 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1. Checkout ─────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Setup Docker Buildx ──────────────────────────────────────────
-      # Buildx enables layer caching via GitHub Actions cache backend.
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ── 3. Build image (verify only, no push) ──────────────────────────
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
