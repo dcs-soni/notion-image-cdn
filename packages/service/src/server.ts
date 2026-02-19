@@ -1,12 +1,7 @@
-// Server Factory
-
-// Creates and configures the Fastify server instance. Separated from the
-// entrypoint (index.ts) for testability — tests can create their own server
-// instances without starting the HTTP listener.
-
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
+import { randomUUID } from 'node:crypto';
 
 import { type ResolvedConfig, loadConfig } from './config/index.js';
 import securityHeadersPlugin from './middleware/security-headers.js';
@@ -49,12 +44,9 @@ export async function createServer(
           ? { target: 'pino-pretty', options: { colorize: true } }
           : undefined,
     },
-    // Trust proxy headers (for rate limiting behind reverse proxy)
     trustProxy: true,
-    // Request ID generation is handled by our middleware
-    genReqId: () => '',
-    // Set body size limit (for POST endpoints in future phases)
-    bodyLimit: 1024 * 1024, // 1MB
+    genReqId: () => randomUUID(),
+    bodyLimit: 1024 * 1024,
   });
 
   server.decorate('config', config);
@@ -82,10 +74,7 @@ export async function createServer(
   await server.register(fastifyRateLimit, {
     max: config.RATE_LIMIT_PER_MINUTE,
     timeWindow: '1 minute',
-    // Use IP-based rate limiting by default
-    keyGenerator: (request) => {
-      return request.ip;
-    },
+    keyGenerator: (request) => request.ip,
     errorResponseBuilder: (request, context) => ({
       error: {
         status: 429,
@@ -113,7 +102,6 @@ export async function createServer(
 
     request.log.error({ err: error, requestId }, 'Unhandled error');
 
-    // Don't leak internal error details to clients
     const statusCode = error.statusCode ?? 500;
     reply.status(statusCode).send({
       error: {

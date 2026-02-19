@@ -1,11 +1,4 @@
-// Upstream Fetcher — Security Layers 3, 4, 5, 6, 7
-
-// Fetches images from Notion's S3 with multiple security layers:
-//   Layer 3: Content-Type validation (only image/* MIME types)
-//   Layer 4: Response size limit (configurable, default 25MB)
-//   Layer 5: Upstream timeout via AbortController (default 15s)
-//   Layer 6: Chunked read with size enforcement (prevent Content-Length lies)
-//   Layer 7: No header forwarding (only minimal headers sent upstream)
+import { validateImageUrl } from './validator.js';
 
 export interface FetchResult {
   data: Buffer;
@@ -22,20 +15,16 @@ export interface FetchError {
 
 export type FetchOutcome = FetchResult | FetchError;
 
-/** Minimal set of headers sent to upstream — Layer 7: no header forwarding */
 const UPSTREAM_HEADERS: Record<string, string> = {
   'User-Agent': 'NotionImageCDN/1.0',
   Accept: 'image/*',
 };
 
-/**
- * Fetch an image from upstream URL with full security validation.
- * Returns the image data as a Buffer, or an error object.
- *
- * Redirects are handled manually (max 5 hops). Each redirect target
- * is validated against the domain allowlist to prevent SSRF via
- * open-redirect chains.
- */
+// Fetch an image from upstream URL with full security validation.
+// Returns the image data as a Buffer, or an error object.
+// Redirects are followed manually (max 5 hops). Each redirect target
+// is validated against the domain allowlist to prevent SSRF via open-redirect chains.
+
 export async function fetchUpstreamImage(
   url: string,
   options: {
@@ -46,7 +35,6 @@ export async function fetchUpstreamImage(
 ): Promise<FetchOutcome> {
   const MAX_REDIRECTS = 5;
 
-  // Layer 5: AbortController for upstream timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs);
 
@@ -84,9 +72,7 @@ export async function fetchUpstreamImage(
           };
         }
 
-        // Security: validate the redirect target against the allowlist
         if (options.allowedDomains) {
-          const { validateImageUrl } = await import('./validator.js');
           const validation = validateImageUrl(redirectUrl.href, options.allowedDomains);
           if (!validation.valid) {
             return {
@@ -102,10 +88,6 @@ export async function fetchUpstreamImage(
         continue;
       }
 
-      // Too many redirects
-      // (This is a guard — we'll only reach here if the loop exhausts)
-      // Actually, if we're here the response is NOT a redirect, so process it.
-
       if (!response.ok) {
         return {
           error: true,
@@ -115,7 +97,6 @@ export async function fetchUpstreamImage(
         };
       }
 
-      // Content-Type validation — only allow image/* MIME types
       const contentType = response.headers.get('content-type') ?? '';
       if (!contentType.startsWith('image/')) {
         return {
@@ -126,8 +107,7 @@ export async function fetchUpstreamImage(
         };
       }
 
-      // Read body in chunks with size enforcement
-      // Don't trust Content-Length header (could lie), count actual bytes
+      // Don't trust Content-Length — count actual bytes during streaming
       const declaredSize = parseInt(response.headers.get('content-length') ?? '0', 10);
 
       if (declaredSize > options.maxSizeBytes) {
@@ -148,7 +128,6 @@ export async function fetchUpstreamImage(
         };
       }
 
-      // Chunked read with running byte count
       const chunks: Uint8Array[] = [];
       let totalBytes = 0;
       const reader = response.body.getReader();
@@ -159,7 +138,6 @@ export async function fetchUpstreamImage(
 
         totalBytes += value.byteLength;
 
-        //  Enforce size limit during streaming (catch Content-Length lies)
         if (totalBytes > options.maxSizeBytes) {
           reader.cancel();
           return {
@@ -191,7 +169,6 @@ export async function fetchUpstreamImage(
       };
     }
 
-    // If we exhausted all redirect hops
     return {
       error: true,
       status: 502,
@@ -199,7 +176,6 @@ export async function fetchUpstreamImage(
       message: `Upstream exceeded maximum of ${MAX_REDIRECTS} redirects`,
     };
   } catch (err: unknown) {
-    // Handle timeout
     if (err instanceof DOMException && err.name === 'AbortError') {
       return {
         error: true,

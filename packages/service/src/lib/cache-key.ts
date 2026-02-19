@@ -1,6 +1,5 @@
-// =============================================================================
 // Cache Key Generator
-// =============================================================================
+
 // Generates deterministic, collision-resistant cache keys from a source URL
 // and optional transform options. Uses SHA-256 for content addressing.
 //
