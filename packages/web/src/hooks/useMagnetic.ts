@@ -2,20 +2,14 @@ import { useRef, useEffect, type RefObject } from 'react';
 import { useMotionValue, useSpring } from 'framer-motion';
 
 interface MagneticOptions {
-  /** Pull strength, 0–1. Default 0.3 */
   strength?: number;
-  /** Activation radius in px. Default 120 */
   radius?: number;
-  /** Spring damping. Default 20 */
   damping?: number;
-  /** Spring stiffness. Default 150 */
   stiffness?: number;
 }
 
-/**
- * Makes an element subtly gravitate toward the cursor when it's nearby.
- * Returns { ref, x, y } — bind ref to the element, use x/y as motion style transforms.
- */
+// Makes an element subtly gravitate toward the cursor when it's nearby.
+// Returns { ref, x, y } — bind ref to the element, use x/y as motion style transforms.
 export function useMagnetic<T extends HTMLElement = HTMLElement>(options: MagneticOptions = {}) {
   const { strength = 0.3, radius = 120, damping = 20, stiffness = 150 } = options;
 

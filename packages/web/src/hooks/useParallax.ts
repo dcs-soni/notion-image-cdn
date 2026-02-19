@@ -6,10 +6,6 @@ interface ParallaxOptions {
   speed?: number;
 }
 
-/**
- * Returns a parallax-transformed Y value driven by scroll position.
- * Attach the returned `y` to a motion element's style.
- */
 export function useParallax(options: ParallaxOptions = {}): {
   ref: React.RefObject<HTMLDivElement | null>;
   y: MotionValue<number>;

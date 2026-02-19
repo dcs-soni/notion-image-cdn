@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useMotionValue } from 'framer-motion';
 
-/**
- * Returns normalized mouse coordinates relative to viewport center.
- * x, y range: [-1, 1] where (0,0) is center of viewport.
- * Throttled to rAF for 60fps performance.
- */
+// Returns normalized mouse coordinates relative to viewport center.
+//x, y range: [-1, 1] where (0,0) is center of viewport.
+//  Throttled to rAF for 60fps performance.
+
 export function useMousePosition() {
   const x = useMotionValue(0);
   const y = useMotionValue(0);

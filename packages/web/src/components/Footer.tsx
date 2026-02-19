@@ -67,7 +67,12 @@ export function Footer() {
         <AnimatedSection delay={0.2}>
           <div className="mt-16 pt-6 micro-border-t flex flex-col md:flex-row items-center justify-between gap-4">
             <span className="font-mono text-[11px] text-muted-foreground/60 tracking-wider">
-              © {new Date().getFullYear()} Divyanshu Soni · MIT License
+              © {new Date().getFullYear()}{' '}
+              <span className="text-cobalt">
+                {' '}
+                <a href="http://divyanshusoni.com">Divyanshu Soni</a>
+              </span>{' '}
+              · MIT License
             </span>
             <div className="flex items-center gap-6">
               <a
