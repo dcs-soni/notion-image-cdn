@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ../.. && bun install --frozen-lockfile && bun run build --filter=web",
+  "buildCommand": "echo 'Pre-built in CI'",
   "outputDirectory": "dist",
-  "installCommand": "echo 'Skipping — handled in buildCommand'",
+  "installCommand": "echo 'Pre-installed in CI'",
   "framework": "vite"
 }

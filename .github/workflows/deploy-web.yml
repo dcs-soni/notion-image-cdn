@@ -79,6 +79,12 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build web package
+        run: bun run build --filter=web
+
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=${{ github.event_name == 'push' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
 
