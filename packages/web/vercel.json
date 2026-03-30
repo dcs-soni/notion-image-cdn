@@ -1,7 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "echo 'Pre-built in CI'",
-  "outputDirectory": "dist",
-  "installCommand": "echo 'Pre-installed in CI'",
-  "framework": "vite"
+  "framework": "vite",
+  "outputDirectory": "dist"
 }

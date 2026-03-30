@@ -85,14 +85,23 @@ jobs:
       - name: Build web package
         run: bun run build --filter=web
 
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=${{ github.event_name == 'push' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build with Vercel
-        run: vercel build ${{ github.event_name == 'push' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Prepare Vercel output
+        run: |
+          mkdir -p packages/web/.vercel/output/static
+          cp -r packages/web/dist/* packages/web/.vercel/output/static/
+          cat > packages/web/.vercel/output/config.json << 'EOF'
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/(.*)", "dest": "/index.html" }
+            ]
+          }
+          EOF
 
       - name: Deploy to Vercel
         id: deploy
+        working-directory: packages/web
         run: |
           URL=$(vercel deploy --prebuilt ${{ github.event_name == 'push' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
