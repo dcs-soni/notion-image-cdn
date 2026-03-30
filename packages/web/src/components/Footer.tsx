@@ -1,5 +1,6 @@
 import { AnimatedSection } from './AnimatedSection';
 import { Github } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
@@ -8,7 +9,7 @@ export function Footer() {
         <AnimatedSection>
           <div className="grid md:grid-cols-12 gap-12">
             {/* Left — Brand */}
-            <div className="md:col-span-5">
+            <div className="md:col-span-4">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 bg-cobalt" />
                 <span className="font-mono text-sm tracking-wider text-foreground/90">
@@ -21,8 +22,8 @@ export function Footer() {
               </p>
             </div>
 
-            {/* Middle — Links */}
-            <div className="md:col-span-3">
+            {/* Middle — Navigation */}
+            <div className="md:col-span-2">
               <h4 className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">
                 Navigation
               </h4>
@@ -41,6 +42,35 @@ export function Footer() {
                     {link.label}
                   </a>
                 ))}
+              </div>
+            </div>
+
+            {/* Documentation links */}
+            <div className="md:col-span-2">
+              <h4 className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">
+                Documentation
+              </h4>
+              <div className="space-y-2">
+                <Link
+                  to="/architecture"
+                  className="block font-sans text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+                >
+                  Architecture Docs
+                </Link>
+                <Link
+                  to="/api-reference"
+                  className="block font-sans text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+                >
+                  API Reference
+                </Link>
+                <a
+                  href="https://www.npmjs.com/package/notion-image-cdn"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block font-sans text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+                >
+                  SDK (npm)
+                </a>
               </div>
             </div>
 

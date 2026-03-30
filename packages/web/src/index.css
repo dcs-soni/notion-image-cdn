@@ -299,4 +299,30 @@
   .custom-cursor-active button {
     cursor: none;
   }
+
+  /* Syntax highlighting tokens — custom regex-based (no Prism) */
+  .syn-kw {
+    color: #c084fc; /* purple-400 — keywords */
+  }
+  .syn-str {
+    color: #34d399; /* emerald-400 — strings */
+  }
+  .syn-num {
+    color: #fbbf24; /* amber-400 — numbers */
+  }
+  .syn-cmt {
+    color: #525252; /* gray-600 — comments */
+    font-style: italic;
+  }
+  .syn-key {
+    color: #60a5fa; /* blue-400 — JSON keys */
+  }
+  .syn-url {
+    color: #38bdf8; /* sky-400 — URLs */
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .syn-flag {
+    color: #fb923c; /* orange-400 — CLI flags */
+  }
 }

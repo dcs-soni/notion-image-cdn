@@ -1,3 +1,4 @@
+import { Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ProblemSection } from './components/ProblemSection';
@@ -8,11 +9,12 @@ import { CodeShowcase } from './components/CodeShowcase';
 import { QuickStart } from './components/QuickStart';
 import { Footer } from './components/Footer';
 import { CustomCursor } from './components/special/CustomCursor';
+import { ArchitecturePage } from './pages/ArchitecturePage';
+import { ApiReferencePage } from './pages/ApiReferencePage';
 
-function App() {
+function LandingPage() {
   return (
-    <div className="relative isolate min-h-screen bg-background text-foreground custom-cursor-active">
-      <CustomCursor />
+    <>
       <Navbar />
       <main className="relative z-(--z-base)">
         <div className="max-w-[1440px] mx-auto">
@@ -32,6 +34,19 @@ function App() {
           <Footer />
         </div>
       </main>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <div className="relative isolate min-h-screen bg-background text-foreground custom-cursor-active">
+      <CustomCursor />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/architecture" element={<ArchitecturePage />} />
+        <Route path="/api-reference" element={<ApiReferencePage />} />
+      </Routes>
     </div>
   );
 }
