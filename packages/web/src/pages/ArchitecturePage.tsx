@@ -564,7 +564,7 @@ export function ArchitecturePage() {
             id="adr-ssrf"
             title="ADR-005: Defense-in-Depth SSRF Protection"
             decision="Multi-layered URL validation: domain allowlist → HTTPS enforcement → private IP blocking → credential detection → redirect chain validation."
-            rationale="An image proxy is an SSRF vector by definition — it fetches URLs from user input. The validator uses numeric IPv4 parsing (not regex) to catch bypass vectors like short-form IPs (127.1), covers all RFC 1918/5735 ranges, blocks IPv6 loopback/link-local, rejects URLs with embedded credentials, and validates every redirect hop against the allowlist (max 5 hops). The URL constructor (not regex) is used for safe parsing."
+            rationale="An image proxy is an SSRF vector by definition — it fetches URLs from user input. The validator uses strict 4-octet IPv4 parsing with leading-zero rejection (prevents octal interpretation like 0177.0.0.1), covers all RFC 1918/5735 ranges, blocks IPv6 loopback/link-local, rejects URLs with embedded credentials, and validates every redirect hop against the allowlist (max 5 hops). The URL constructor (not regex) is used for safe parsing."
             alternatives="Regex-only validation (bypassable), allowlist-only (misses IP-based bypasses), library-based (ssrf-guard, but adds dependency and may not cover all vectors)."
           />
         </div>
@@ -588,7 +588,7 @@ export function ArchitecturePage() {
           <FlowStep
             step={2}
             title="Middleware pipeline"
-            description="Request passes through: Request ID assignment → CORS headers → Rate limiting (100 req/min/IP) → Security headers (Helmet) → API key validation (if enabled)."
+            description="Request passes through: Request ID assignment → CORS headers → Rate limiting (100 req/min/IP) → Security headers → API key validation (if enabled)."
           />
           <FlowStep
             step={3}
@@ -731,17 +731,17 @@ const notionUrl =
 
 if (isNotionImageUrl(notionUrl)) {
   const cdnUrl = getOptimizedUrl(notionUrl, {
-    cdnBaseUrl: 'https://notion-image-cdn.vercel.app',
+    cdnBaseUrl: 'https://notion-image-cdn.onrender.com',
     width: 800,
     format: 'webp',
     quality: 85,
   });
-  // → https://notion-image-cdn.vercel.app/img/abc/def/photo.jpg?w=800&fmt=webp&q=85
+  // → https://notion-image-cdn.onrender.com/img/abc/def/photo.jpg?w=800&fmt=webp&q=85
 }
 
 // Non-Notion URLs pass through unchanged
 const regularUrl = getOptimizedUrl('https://example.com/logo.png', {
-  cdnBaseUrl: 'https://notion-image-cdn.vercel.app',
+  cdnBaseUrl: 'https://notion-image-cdn.onrender.com',
 });
 // → 'https://example.com/logo.png' (unchanged)`}
         />
@@ -756,7 +756,7 @@ function BlogPost({ coverImage }: { coverImage: string }) {
   return (
     <NotionImage
       src={coverImage}
-      cdnBaseUrl="https://notion-image-cdn.vercel.app"
+      cdnBaseUrl="https://notion-image-cdn.onrender.com"
       alt="Blog cover"
       width={1200}
       format="webp"
@@ -776,7 +776,7 @@ function BlogPost({ coverImage }: { coverImage: string }) {
 
 // Create a pre-configured rewriter
 const rewrite = createNotionImagePlugin({
-  cdnBaseUrl: 'https://notion-image-cdn.vercel.app',
+  cdnBaseUrl: 'https://notion-image-cdn.onrender.com',
   defaultFormat: 'webp',
   defaultQuality: 85,
   defaultWidth: 1200,
@@ -802,7 +802,7 @@ const components = {
               label: 'Proxy',
               language: 'bash',
               code: `# Proxy a Notion image (first request — cache miss → fetches from upstream)
-curl -v "https://notion-image-cdn.vercel.app/api/v1/proxy?url=https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2Fabc%2Fdef%2Fphoto.jpg&w=800&fmt=webp&q=85"
+curl -v "https://notion-image-cdn.onrender.com/api/v1/proxy?url=https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2Fabc%2Fdef%2Fphoto.jpg&w=800&fmt=webp&q=85"
 
 # Response headers:
 #   X-Cache: MISS
@@ -814,7 +814,7 @@ curl -v "https://notion-image-cdn.vercel.app/api/v1/proxy?url=https%3A%2F%2Fprod
               label: 'Clean URL',
               language: 'bash',
               code: `# Fetch via clean URL (after proxying — cache hit)
-curl "https://notion-image-cdn.vercel.app/img/abc/def/photo.jpg?w=800&fmt=webp"
+curl "https://notion-image-cdn.onrender.com/img/abc/def/photo.jpg?w=800&fmt=webp"
 
 # Response headers:
 #   X-Cache: HIT
@@ -824,7 +824,7 @@ curl "https://notion-image-cdn.vercel.app/img/abc/def/photo.jpg?w=800&fmt=webp"
               label: 'Cache Purge',
               language: 'bash',
               code: `# Purge a specific image from all cache tiers
-curl -X DELETE "https://notion-image-cdn.vercel.app/api/v1/cache?url=https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2Fabc%2Fdef%2Fphoto.jpg"
+curl -X DELETE "https://notion-image-cdn.onrender.com/api/v1/cache?url=https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2Fabc%2Fdef%2Fphoto.jpg"
 
 # Response: { "message": "Cache purged successfully" }`,
             },
@@ -832,7 +832,7 @@ curl -X DELETE "https://notion-image-cdn.vercel.app/api/v1/cache?url=https%3A%2F
               label: 'Health',
               language: 'bash',
               code: `# Health check
-curl "https://notion-image-cdn.vercel.app/health"
+curl "https://notion-image-cdn.onrender.com/health"
 
 # Response:
 # {

@@ -8,7 +8,7 @@ import { TryItPanel } from '../components/docs/TryItPanel';
 import { Globe, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const BASE_URLS = {
-  production: 'https://notion-image-cdn.vercel.app',
+  production: 'https://notion-image-cdn.onrender.com',
   local: 'http://localhost:3002',
 };
 
@@ -1000,8 +1000,8 @@ const components = {
               <code className="font-mono text-sm text-foreground/90">{'<NotionImage />'}</code>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              Drop-in <code className="font-mono text-xs">{'<img>'}</code> replacement that handles
-              URL rewriting automatically. Passes through all standard img attributes.
+              Drop-in <code className="font-mono text-xs">{`<img>`}</code> replacement that handles
+              URL rewriting automatically. Supports <code className="font-mono text-xs">alt</code>, <code className="font-mono text-xs">className</code>, <code className="font-mono text-xs">loading</code>, and <code className="font-mono text-xs">style</code> attributes.
             </p>
 
             <h4 className="font-mono text-[10px] tracking-wider text-muted-foreground/50 uppercase mb-3">
@@ -1051,20 +1051,7 @@ const components = {
                   required: false,
                   description: 'Output quality (1-100)',
                 },
-                {
-                  name: 'fit',
-                  location: 'body',
-                  type: 'string',
-                  required: false,
-                  description: 'cover | contain | fill | inside | outside',
-                },
-                {
-                  name: '...rest',
-                  location: 'body',
-                  type: 'ImgHTMLAttributes',
-                  required: false,
-                  description: 'All standard <img> attributes (alt, className, loading, etc.)',
-                },
+
               ]}
             />
 
