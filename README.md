@@ -4,6 +4,8 @@ Notion expires its image URLs. Every S3-signed link breaks after an hour, which 
 
 **notion-image-cdn** fixes this: a lightweight proxy service that fetches, optimizes, caches, and serves Notion images behind permanent, stable URLs — paired with a zero-dependency SDK that rewrites URLs client-side.
 
+> 🚀 **Test the service live at [notion-image-cdn-tests.vercel.app](https://notion-image-cdn-tests.vercel.app)**
+
 ```
 Notion S3 URL (expires in ~1 hour)
   ↓
@@ -141,7 +143,7 @@ cp .env.example .env
 bun run dev
 ```
 
-The service starts at `http://localhost:3001`.
+The service starts at `http://localhost:3002`.
 
 ### Docker
 
@@ -157,7 +159,7 @@ docker compose --profile s3 up
 
 | Variable                | Default         | Description                                       |
 | ----------------------- | --------------- | ------------------------------------------------- |
-| `PORT`                  | `3001`          | Server port                                       |
+| `PORT`                  | `3002`          | Server port                                       |
 | `STORAGE_BACKEND`       | `fs`            | `fs`, `s3`, or `r2`                               |
 | `CACHE_DIR`             | `./cache`       | Local cache directory (when `STORAGE_BACKEND=fs`) |
 | `REDIS_URL`             | —               | Redis connection string for L2 edge cache         |
