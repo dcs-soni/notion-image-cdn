@@ -44,7 +44,15 @@ export async function proxyRoutes(fastify: FastifyInstance) {
     }
 
     const parsed = parseNotionUrl(rawUrl);
-    const cacheBaseUrl = parsed?.baseUrl ?? rawUrl.split('?')[0] ?? rawUrl;
+
+    // Normalize cache key to match the /img/ route's format:
+    //   https://prod-files-secure.s3.us-west-2.amazonaws.com/<workspace>/<block>/<filename>
+    // This ensures images cached via /api/v1/proxy are servable from /img/:ws/:block/:file
+    const NOTION_S3_HOST = 'https://prod-files-secure.s3.us-west-2.amazonaws.com';
+    const cacheBaseUrl =
+      parsed?.workspaceId && parsed?.blockId && parsed?.filename
+        ? `${NOTION_S3_HOST}/${parsed.workspaceId}/${parsed.blockId}/${parsed.filename}`
+        : parsed?.baseUrl ?? rawUrl.split('?')[0] ?? rawUrl;
 
     return runImagePipeline(
       cacheBaseUrl,
