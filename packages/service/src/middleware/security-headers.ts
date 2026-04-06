@@ -1,24 +1,41 @@
-import type { FastifyPluginCallback } from 'fastify';
+import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
+import fastifyHelmet from '@fastify/helmet';
 
-const securityHeadersPlugin: FastifyPluginCallback = (fastify, _opts, done) => {
+const securityHeadersPlugin: FastifyPluginAsync = async (fastify) => {
+  await fastify.register(fastifyHelmet, {
+    // Strict CSP, this service only serves images and JSON, never HTML pages
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        imgSrc: ["'self'"],
+        styleSrc: ["'none'"],
+        scriptSrc: ["'none'"],
+      },
+    },
+
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+
+    crossOriginEmbedderPolicy: false,
+
+    xFrameOptions: { action: 'deny' },
+
+    referrerPolicy: { policy: 'no-referrer' },
+
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  });
+
+  // Permissions-Policy is not covered by helmet adding manually
   fastify.addHook('onSend', async (_request, reply) => {
-    reply.header('X-Content-Type-Options', 'nosniff');
-    reply.header('X-Frame-Options', 'DENY');
-    reply.header('X-XSS-Protection', '1; mode=block');
-    reply.header(
-      'Content-Security-Policy',
-      "default-src 'none'; img-src 'self'; style-src 'none'; script-src 'none'",
-    );
-    reply.header('Referrer-Policy', 'no-referrer');
     reply.header(
       'Permissions-Policy',
       'camera=(), microphone=(), geolocation=(), interest-cohort=()',
     );
-    reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   });
-
-  done();
 };
 
 export default fp(securityHeadersPlugin, {
