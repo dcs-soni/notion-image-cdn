@@ -9,14 +9,17 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { validateImageUrl } from '../lib/validator.js';
 import { parseNotionUrl } from '../lib/url-parser.js';
 import { runImagePipeline } from '../lib/image-pipeline.js';
+import { buildQuotaPreHandler } from '../middleware/quota.js';
 import type { ResolvedConfig } from '../config/index.js';
 
 export async function proxyRoutes(fastify: FastifyInstance) {
   const config: ResolvedConfig = fastify.config;
+  const quotaCheck = buildQuotaPreHandler(config);
 
   fastify.get(
     '/api/v1/proxy',
     {
+      preHandler: [quotaCheck],
       config: {
         rateLimit: {
           max: config.RATE_LIMIT_PROXY,
