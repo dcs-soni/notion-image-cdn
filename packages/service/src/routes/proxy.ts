@@ -14,7 +14,18 @@ import type { ResolvedConfig } from '../config/index.js';
 export async function proxyRoutes(fastify: FastifyInstance) {
   const config: ResolvedConfig = fastify.config;
 
-  fastify.get('/api/v1/proxy', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get(
+    '/api/v1/proxy',
+    {
+      config: {
+        rateLimit: {
+          max: config.RATE_LIMIT_PROXY,
+          timeWindow: '1 minute',
+          continueExceeding: true,
+        },
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
     const query = request.query as Record<string, unknown>;
     const rawUrl = typeof query['url'] === 'string' ? query['url'] : null;
 

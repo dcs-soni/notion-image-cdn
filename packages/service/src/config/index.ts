@@ -27,7 +27,14 @@ const ConfigSchema = z.object({
     .min(1024)
     .default(25 * 1024 * 1024), // 25MB
   UPSTREAM_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15_000),
-  RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(100),
+  RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(60),
+  /** upstream fetch + Sharp + R2 write (most expensive) */
+  RATE_LIMIT_PROXY: z.coerce.number().int().min(1).default(20),
+  /** usually a cache hit (cheapest) */
+  RATE_LIMIT_IMAGE: z.coerce.number().int().min(1).default(120),
+  /** triggers expensive re-fetches (destructive) */
+  RATE_LIMIT_CACHE_PURGE: z.coerce.number().int().min(1).default(5),
+  RATE_LIMIT_HEALTH: z.coerce.number().int().min(1).default(10),
   CACHE_TTL_SECONDS: z.coerce.number().int().min(60).default(86400),
 
   API_KEYS: z.string().optional(),

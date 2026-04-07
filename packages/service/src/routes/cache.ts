@@ -1,8 +1,23 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { generateCachePrefix } from '../lib/cache-key.js';
+import type { ResolvedConfig } from '../config/index.js';
 
 export async function cacheRoutes(fastify: FastifyInstance) {
-  fastify.delete('/api/v1/cache', async (request: FastifyRequest, reply: FastifyReply) => {
+  const config: ResolvedConfig = fastify.config;
+
+  fastify.delete(
+    '/api/v1/cache',
+    {
+      config: {
+        rateLimit: {
+          max: config.RATE_LIMIT_CACHE_PURGE,
+          timeWindow: '1 minute',
+          // Persistent abuse extends the cooldown — purging is extremely destructive
+          continueExceeding: true,
+        },
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
     const query = request.query as Record<string, unknown>;
     const url = typeof query['url'] === 'string' ? query['url'] : null;
     const pageId = typeof query['page_id'] === 'string' ? query['page_id'] : null;
@@ -65,7 +80,17 @@ export async function cacheRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get('/api/v1/stats', async (_request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get(
+    '/api/v1/stats',
+    {
+      config: {
+        rateLimit: {
+          max: config.RATE_LIMIT_HEALTH,
+          timeWindow: '1 minute',
+        },
+      },
+    },
+    async (_request: FastifyRequest, reply: FastifyReply) => {
     return reply.status(200).send({
       status: 'ok',
       message: 'Statistics endpoint. Detailed metrics available in Phase 4 (Dashboard).',

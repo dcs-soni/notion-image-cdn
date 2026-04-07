@@ -21,7 +21,15 @@ services:
       - key: STORAGE_BACKEND
         value: r2
       - key: RATE_LIMIT_PER_MINUTE
-        value: '100'
+        value: '60'
+      - key: RATE_LIMIT_PROXY
+        value: '20'
+      - key: RATE_LIMIT_IMAGE
+        value: '120'
+      - key: RATE_LIMIT_CACHE_PURGE
+        value: '5'
+      - key: RATE_LIMIT_HEALTH
+        value: '10'
 
       - key: S3_BUCKET
         sync: false

@@ -67,6 +67,10 @@ export async function createServer(
       'X-Cache-Tier',
       'X-Original-Size',
       'X-Optimized-Size',
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+      'X-RateLimit-Reset',
+      'Retry-After',
     ],
     maxAge: 86400,
   });
@@ -75,11 +79,17 @@ export async function createServer(
     max: config.RATE_LIMIT_PER_MINUTE,
     timeWindow: '1 minute',
     keyGenerator: (request) => request.ip,
+    // Extend the cooldown window each time a rate-limited client keeps sending
+    // requests. Prevents attackers from timing requests at window boundaries.
+    continueExceeding: true,
+    addHeadersOnExceeding: { 'x-ratelimit-limit': true, 'x-ratelimit-remaining': true, 'x-ratelimit-reset': true },
+    addHeaders: { 'x-ratelimit-limit': true, 'x-ratelimit-remaining': true, 'x-ratelimit-reset': true, 'retry-after': true },
     errorResponseBuilder: (request, context) => ({
       error: {
         status: 429,
         code: 'RATE_LIMIT_EXCEEDED',
         message: `Rate limit exceeded. ${context.max} requests per minute allowed. Try again in ${Math.ceil(context.ttl / 1000)}s.`,
+        retryAfter: Math.ceil(context.ttl / 1000),
         requestId: (request as unknown as { requestId: string }).requestId ?? 'unknown',
       },
     }),

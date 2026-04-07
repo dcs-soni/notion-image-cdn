@@ -23,6 +23,14 @@ export async function imageRoutes(fastify: FastifyInstance) {
 
   fastify.get<{ Params: ImageParams }>(
     '/img/:workspaceId/:blockId/:filename',
+    {
+      config: {
+        rateLimit: {
+          max: config.RATE_LIMIT_IMAGE,
+          timeWindow: '1 minute',
+        },
+      },
+    },
     async (request: FastifyRequest<{ Params: ImageParams }>, reply: FastifyReply) => {
       const { workspaceId, blockId, filename } = request.params;
 

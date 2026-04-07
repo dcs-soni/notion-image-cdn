@@ -8,7 +8,19 @@ const SERVICE_VERSION: string = (require('../../package.json') as { version: str
 const startTime = Date.now();
 
 export async function healthRoutes(fastify: FastifyInstance) {
-  fastify.get('/health', async (_request, reply) => {
+  const config = fastify.config;
+
+  fastify.get(
+    '/health',
+    {
+      config: {
+        rateLimit: {
+          max: config.RATE_LIMIT_HEALTH,
+          timeWindow: '1 minute',
+        },
+      },
+    },
+    async (_request, reply) => {
     const storage = fastify.storage;
     const edgeCache = fastify.edgeCache;
 

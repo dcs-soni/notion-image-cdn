@@ -34,7 +34,7 @@ async function main() {
     server.log.info(`Notion Image CDN service running at http://${config.HOST}:${config.PORT}`);
     server.log.info(`   Storage: ${server.storage.name()}`);
     server.log.info(`   Cache: ${server.edgeCache?.name() ?? 'disabled'}`);
-    server.log.info(`   Rate limit: ${config.RATE_LIMIT_PER_MINUTE} req/min`);
+    server.log.info(`   Rate limits: global=${config.RATE_LIMIT_PER_MINUTE}, proxy=${config.RATE_LIMIT_PROXY}, image=${config.RATE_LIMIT_IMAGE}, cache-purge=${config.RATE_LIMIT_CACHE_PURGE}, health=${config.RATE_LIMIT_HEALTH} req/min`);
   } catch (err) {
     server.log.fatal({ err }, 'Failed to start server');
     process.exit(1);
