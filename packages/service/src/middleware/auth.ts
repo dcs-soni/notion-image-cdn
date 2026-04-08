@@ -25,52 +25,55 @@ const authPlugin: FastifyPluginCallback<AuthPluginOptions> = (fastify, opts, don
     process.exit(1);
   }
 
-  fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
-    const apiKey = extractApiKey(request);
-
-    if (!apiKey) {
-      reply.status(401).send({
-        error: {
-          status: 401,
-          code: 'MISSING_API_KEY',
-          message:
-            'API key is required. Pass via Authorization: Bearer <key> header or ?api_key=<key> query parameter.',
-          requestId: request.requestId,
-        },
-      });
-      return;
-    }
-
-    if (apiKey.length > 256) {
-      reply.status(401).send({
-        error: {
-          status: 401,
-          code: 'INVALID_API_KEY',
-          message: 'Invalid API key format.',
-          requestId: request.requestId,
-        },
-      });
-      return;
-    }
-
-    if (!isValidKey(apiKey, config.apiKeysSet)) {
-      request.log.warn({ requestId: request.requestId }, 'Invalid API key presented');
-      reply.status(401).send({
-        error: {
-          status: 401,
-          code: 'INVALID_API_KEY',
-          message: 'The provided API key is not valid.',
-          requestId: request.requestId,
-        },
-      });
-      return;
-    }
-
-    request.log.info({ requestId: request.requestId }, 'API key validated');
-  });
+  fastify.decorate('authenticate', authenticate);
 
   done();
 };
+
+export async function authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  const config = request.server.config;
+  const apiKey = extractApiKey(request);
+
+  if (!apiKey) {
+    reply.status(401).send({
+      error: {
+        status: 401,
+        code: 'MISSING_API_KEY',
+        message:
+          'API key is required. Pass via Authorization: Bearer <key> header or ?api_key=<key> query parameter.',
+        requestId: request.requestId,
+      },
+    });
+    return;
+  }
+
+  if (apiKey.length > 256) {
+    reply.status(401).send({
+      error: {
+        status: 401,
+        code: 'INVALID_API_KEY',
+        message: 'Invalid API key format.',
+        requestId: request.requestId,
+      },
+    });
+    return;
+  }
+
+  if (!isValidKey(apiKey, config.apiKeysSet)) {
+    request.log.warn({ requestId: request.requestId }, 'Invalid API key presented');
+    reply.status(401).send({
+      error: {
+        status: 401,
+        code: 'INVALID_API_KEY',
+        message: 'The provided API key is not valid.',
+        requestId: request.requestId,
+      },
+    });
+    return;
+  }
+
+  request.log.info({ requestId: request.requestId }, 'API key validated');
+}
 
 function isValidKey(presented: string, validKeys: Set<string>): boolean {
   // Normalise to a fixed-length hash so timingSafeEqual can compare equal-length buffers
