@@ -104,20 +104,29 @@ export function negotiateFormat(
   return 'original';
 }
 
+export function snapToBucket(value: number, buckets: number[]): number {
+  return buckets.reduce((prev, curr) =>
+    Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+  );
+}
+
+const WIDTH_BUCKETS = [320, 480, 640, 800, 1024, 1200, 1600, 1920];
+const QUALITY_BUCKETS = [60, 75, 85, 95];
+
 export function parseTransformOptions(query: Record<string, unknown>): TransformOptions {
   const options: TransformOptions = {};
 
   if (query['w'] !== undefined) {
     const w = parseInt(String(query['w']), 10);
     if (!isNaN(w) && w >= 1 && w <= 10000) {
-      options.width = w;
+      options.width = snapToBucket(w, WIDTH_BUCKETS);
     }
   }
 
   if (query['h'] !== undefined) {
     const h = parseInt(String(query['h']), 10);
     if (!isNaN(h) && h >= 1 && h <= 10000) {
-      options.height = h;
+      options.height = snapToBucket(h, WIDTH_BUCKETS);
     }
   }
 
@@ -131,7 +140,7 @@ export function parseTransformOptions(query: Record<string, unknown>): Transform
   if (query['q'] !== undefined) {
     const q = parseInt(String(query['q']), 10);
     if (!isNaN(q) && q >= 1 && q <= 100) {
-      options.quality = q;
+      options.quality = snapToBucket(q, QUALITY_BUCKETS);
     }
   }
 
