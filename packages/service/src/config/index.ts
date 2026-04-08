@@ -34,7 +34,7 @@ const ConfigSchema = z.object({
   RATE_LIMIT_IMAGE: z.coerce.number().int().min(1).default(120),
   /** triggers expensive re-fetches (destructive) */
   RATE_LIMIT_CACHE_PURGE: z.coerce.number().int().min(1).default(5),
-  RATE_LIMIT_HEALTH: z.coerce.number().int().min(1).default(10),
+  RATE_LIMIT_HEALTH: z.coerce.number().int().min(1).default(100),
   DAILY_PROXY_QUOTA: z.coerce.number().int().min(1).default(5000),
   CACHE_TTL_SECONDS: z.coerce.number().int().min(60).default(86400),
 
