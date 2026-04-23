@@ -1,0 +1,33 @@
+name: Keep Upstash Redis Active
+
+on:
+  schedule:
+    # Runs at 00:00 UTC on every 4th day of the month (e.g., 1st, 5th, 9th, etc.)
+    - cron: '0 0 */4 * *'
+
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  ping-redis:
+    name: Ping Upstash Redis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send GET Request to Upstash REST API
+        # Using curl with the --fail flag so the step fails if we get a non-200 response
+        # --silent and --show-error keep logs clean but still show issues
+        # --max-time prevents the job from hanging indefinitely
+        run: |
+          curl --request GET \
+               --url "${{ secrets.UPSTASH_REDIS_REST_URL }}/get/keepalive" \
+               --header "Authorization: Bearer ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}" \
+               --fail \
+               --silent \
+               --show-error \
+               --max-time 10
+
+      - name: Notification on Failure
+        if: failure()
+        run: |
+          echo "::error::Failed to ping Upstash Redis. Please check your GitHub Secrets (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) and ensure the database hasn't been archived."
